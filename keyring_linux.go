@@ -76,7 +76,7 @@ func (s secretServiceProvider) Get(service, user string) (string, error) {
 	}
 
 	if len(results) == 0 {
-		return "", fmt.Errorf("Not found")
+		return "", ErrNotFound
 	}
 
 	secret, err := svc.GetSecret(results[0], session.Path())

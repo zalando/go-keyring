@@ -1,8 +1,14 @@
 package keyring
 
+import "fmt"
+
 // provider set in the init function by the relevant os file e.g.:
 // keyring_linux.go
 var provider keyring
+
+var (
+	ErrNotFound = fmt.Errorf("secret not found in keyring")
+)
 
 // keyring provides a simple set/get interface for a keyring service.
 type keyring interface {
