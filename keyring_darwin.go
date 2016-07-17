@@ -55,17 +55,17 @@ func (k MacOSXKeychain) Set(service, username, password string) error {
 		"-w", password).Run()
 }
 
-// func (k MacOSXKeychain) Delete(service, username string) error {
-// 	out, err := exec.Command(
-// 		execPathKeychain,
-// 		"delete-generic-password",
-// 		"-s", service,
-// 		"-a", username).CombinedOutput()
-// 	if strings.Contains(fmt.Sprintf("%s", out), "could not be found") {
-// 		err = ErrNotFound
-// 	}
-// 	return err
-// }
+func (k MacOSXKeychain) Delete(service, username string) error {
+	out, err := exec.Command(
+		execPathKeychain,
+		"delete-generic-password",
+		"-s", service,
+		"-a", username).CombinedOutput()
+	if strings.Contains(fmt.Sprintf("%s", out), "could not be found") {
+		err = ErrNotFound
+	}
+	return err
+}
 
 func init() {
 	provider = MacOSXKeychain{}
