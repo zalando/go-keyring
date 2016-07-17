@@ -7,6 +7,8 @@ import "fmt"
 var provider keyring
 
 var (
+	// ErrNotFound is the expected error if the secret isn't found in the
+	// keyring.
 	ErrNotFound = fmt.Errorf("secret not found in keyring")
 )
 
