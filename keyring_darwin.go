@@ -24,13 +24,13 @@ const (
 	execPathKeychain = "/usr/bin/security"
 )
 
-type MacOSXKeychain struct{}
+type macOSXKeychain struct{}
 
 // func (*MacOSXKeychain) IsAvailable() bool {
 // 	return exec.Command(execPathKeychain).Run() != exec.ErrNotFound
 // }
 
-func (k MacOSXKeychain) Get(service, username string) (string, error) {
+func (k macOSXKeychain) Get(service, username string) (string, error) {
 	out, err := exec.Command(
 		execPathKeychain,
 		"find-generic-password",
@@ -45,7 +45,7 @@ func (k MacOSXKeychain) Get(service, username string) (string, error) {
 	return strings.TrimSpace(fmt.Sprintf("%s", out)), nil
 }
 
-func (k MacOSXKeychain) Set(service, username, password string) error {
+func (k macOSXKeychain) Set(service, username, password string) error {
 	return exec.Command(
 		execPathKeychain,
 		"add-generic-password",
@@ -55,7 +55,7 @@ func (k MacOSXKeychain) Set(service, username, password string) error {
 		"-w", password).Run()
 }
 
-func (k MacOSXKeychain) Delete(service, username string) error {
+func (k macOSXKeychain) Delete(service, username string) error {
 	out, err := exec.Command(
 		execPathKeychain,
 		"delete-generic-password",
@@ -68,5 +68,5 @@ func (k MacOSXKeychain) Delete(service, username string) error {
 }
 
 func init() {
-	provider = MacOSXKeychain{}
+	provider = macOSXKeychain{}
 }
