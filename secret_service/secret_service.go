@@ -1,6 +1,10 @@
 package ss
 
-import "github.com/godbus/dbus"
+import (
+	"fmt"
+
+	"github.com/godbus/dbus"
+)
 
 const (
 	serviceName         = "org.freedesktop.secrets"
@@ -66,6 +70,33 @@ func (s *SecretService) OpenSession() (dbus.BusObject, error) {
 // GetCollection returns a collection from a name.
 func (s *SecretService) GetCollection(name string) dbus.BusObject {
 	return s.Object(serviceName, dbus.ObjectPath(collectionBasePath+name))
+}
+
+// Unlock unlocks a collection
+func (s *SecretService) Unlock(collection dbus.ObjectPath) error {
+	var unlocked []dbus.ObjectPath
+	var prompt dbus.ObjectPath
+	err := s.object.Call(serviceInterface+".Unlock", 0, []dbus.ObjectPath{collection}).Store(&unlocked, &prompt)
+	if err != nil {
+		return err
+	}
+
+	_, v, err := s.handlePrompt(prompt)
+	if err != nil {
+		return err
+	}
+
+	collections := v.Value()
+	switch c := collections.(type) {
+	case []dbus.ObjectPath:
+		unlocked = append(unlocked, c...)
+	}
+
+	if len(unlocked) != 1 && unlocked[0] != collection {
+		return fmt.Errorf("failed to unlock correct collection")
+	}
+
+	return nil
 }
 
 // Close closes a secret service dbus session.
@@ -166,4 +197,20 @@ func (s *SecretService) GetSecret(itemPath dbus.ObjectPath, session dbus.ObjectP
 	}
 
 	return &secret, nil
+}
+
+// Delete deletes an item from the collection.
+func (s *SecretService) Delete(itemPath dbus.ObjectPath) error {
+	var prompt dbus.ObjectPath
+	err := s.Object(serviceName, itemPath).Call(itemInterface+".Delete", 0).Store(&prompt)
+	if err != nil {
+		return err
+	}
+
+	_, _, err = s.handlePrompt(prompt)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

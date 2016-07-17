@@ -32,3 +32,19 @@ func TestGet(t *testing.T) {
 		t.Errorf("Expected password %s, got %s", password, pw)
 	}
 }
+
+// TestGetNonExisting tests getting a secret not in the keyring.
+func TestGetNonExisting(t *testing.T) {
+	_, err := Get(service, user+"fake")
+	if err != ErrNotFound {
+		t.Errorf("Expected error ErrNotFound, got %s", err)
+	}
+}
+
+// TestDelete tests deleting a secret from the keyring.
+func TestDelete(t *testing.T) {
+	err := Delete(service, user)
+	if err != nil {
+		t.Errorf("Should not fail, got: %s", err)
+	}
+}

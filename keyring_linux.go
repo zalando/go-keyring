@@ -3,6 +3,7 @@ package keyring
 import (
 	"fmt"
 
+	"github.com/godbus/dbus"
 	"github.com/mikkeloscar/go-keyring/secret_service"
 )
 
@@ -39,6 +40,11 @@ func (s secretServiceProvider) Set(service, user, pass string) error {
 
 	collection := svc.GetCollection("login")
 
+	err = svc.Unlock(collection.Path())
+	if err != nil {
+		return err
+	}
+
 	err = svc.CreateItem(collection,
 		fmt.Sprintf("Password for '%s' on '%s'", user, service),
 		attributes, secret)
@@ -49,9 +55,34 @@ func (s secretServiceProvider) Set(service, user, pass string) error {
 	return nil
 }
 
+func (s secretServiceProvider) findItem(svc *ss.SecretService, service, user string) (dbus.ObjectPath, error) {
+	collection := svc.GetCollection("login")
+
+	search := map[string]string{
+		"username": user,
+		"service":  service,
+	}
+
+	results, err := svc.SearchItems(collection, search)
+	if err != nil {
+		return "", err
+	}
+
+	if len(results) == 0 {
+		return "", ErrNotFound
+	}
+
+	return results[0], nil
+}
+
 // Get gets a secret from the keyring given a service name and a user.
 func (s secretServiceProvider) Get(service, user string) (string, error) {
 	svc, err := ss.NewSecretService()
+	if err != nil {
+		return "", err
+	}
+
+	item, err := s.findItem(svc, service, user)
 	if err != nil {
 		return "", err
 	}
@@ -63,28 +94,27 @@ func (s secretServiceProvider) Get(service, user string) (string, error) {
 	}
 	defer svc.Close(session)
 
-	search := map[string]string{
-		"username": user,
-		"service":  service,
-	}
-
-	collection := svc.GetCollection("login")
-
-	results, err := svc.SearchItems(collection, search)
-	if err != nil {
-		return "", err
-	}
-
-	if len(results) == 0 {
-		return "", ErrNotFound
-	}
-
-	secret, err := svc.GetSecret(results[0], session.Path())
+	secret, err := svc.GetSecret(item, session.Path())
 	if err != nil {
 		return "", err
 	}
 
 	return string(secret.Value), nil
+}
+
+// Delete deletes a secret, identified by service & user, from the keyring.
+func (s secretServiceProvider) Delete(service, user string) error {
+	svc, err := ss.NewSecretService()
+	if err != nil {
+		return err
+	}
+
+	item, err := s.findItem(svc, service, user)
+	if err != nil {
+		return err
+	}
+
+	return svc.Delete(item)
 }
 
 func init() {
