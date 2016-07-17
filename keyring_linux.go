@@ -55,6 +55,7 @@ func (s secretServiceProvider) Set(service, user, pass string) error {
 	return nil
 }
 
+// findItem looksup an item by service and user.
 func (s secretServiceProvider) findItem(svc *ss.SecretService, service, user string) (dbus.ObjectPath, error) {
 	collection := svc.GetCollection("login")
 
