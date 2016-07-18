@@ -7,12 +7,14 @@ secrets from the system keyring. It currently support **OS X** and **Linux
 (dbus)**. A NO-OP implementation for Windows is also included to make it
 portable.
 
-### OS X
+## Dependencies
+
+#### OS X
 
 The OS X implementation depends on the `/usr/bin/security` binary for
 interfacing with the OS X keychain. It should be available by default.
 
-### Linux
+#### Linux
 
 The Linux implementation depends on the [Secret Service][SecretService] dbus
 interface which is provided by `gnome-keyring`.
@@ -25,6 +27,42 @@ keyring frontend program `seahorse`.
  * Go to **File > New > Password Keyring**
  * Click **Continue**
  * When asked for a name, use: **login**
+
+## Usage
+
+How to *set* and *get* a secret from the keyring.
+
+```go
+package main
+
+import (
+    "log"
+
+    "github.com/mikkeloscar/go-keyring"
+)
+
+func main() {
+    service := "my-app"
+    user := "anon"
+    password := "secret"
+
+    // set password
+    err := keyring.Set(service, user, password)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    // get password
+    secret, err := keyring.Get(service, user)
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    log.Println(secret)
+}
+
+```
+
 
 ## Tests
 
