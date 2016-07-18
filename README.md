@@ -1,6 +1,6 @@
 # Go keyring library
-[![Go Report Card](https://goreportcard.com/badge/mikkeloscar/go-keyring)](https://goreportcard.com/report/mikkeloscar/go-keyring)
-[![GoDoc](https://godoc.org/github.com/mikkeloscar/go-keyring?status.svg)](https://godoc.org/github.com/mikkeloscar/go-keyring)
+[![Go Report Card](https://goreportcard.com/badge/zalando/go-keyring)](https://goreportcard.com/report/zalando/go-keyring)
+[![GoDoc](https://godoc.org/github.com/zalando/go-keyring?status.svg)](https://godoc.org/github.com/zalando/go-keyring)
 
 `go-keyring` is an OS agnostic library for *setting*, *getting* and *deleting*
 secrets from the system keyring. It currently support **OS X** and **Linux
@@ -38,7 +38,7 @@ package main
 import (
     "log"
 
-    "github.com/mikkeloscar/go-keyring"
+    "github.com/zalando/go-keyring"
 )
 
 func main() {

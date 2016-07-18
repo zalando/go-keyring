@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/godbus/dbus"
-	"github.com/mikkeloscar/go-keyring/secret_service"
+	"github.com/zalando/go-keyring/secret_service"
 )
 
 type secretServiceProvider struct{}
