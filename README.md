@@ -22,7 +22,7 @@ is default in most distros. If it doesn't exist you can create it through the
 keyring frontend program `seahorse`.
 
  * Open `seahorse`
- * Go to **File > New > Password Kyering**
+ * Go to **File > New > Password Keyring**
  * Click **Continue**
  * When asked for a name, use: **login**
 
