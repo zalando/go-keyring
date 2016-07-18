@@ -17,13 +17,6 @@ func (s secretServiceProvider) Set(service, user, pass string) error {
 		return err
 	}
 
-	// create or get collection
-	// TODO: make work
-	// c, err := svc.CreateCollection(service)
-	// if err != nil {
-	// 	return err
-	// }
-
 	// open a session
 	session, err := svc.OpenSession()
 	if err != nil {
