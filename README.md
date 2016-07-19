@@ -3,20 +3,19 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/zalando/go-keyring)](https://goreportcard.com/report/github.com/zalando/go-keyring)
 [![GoDoc](https://godoc.org/github.com/zalando/go-keyring?status.svg)](https://godoc.org/github.com/zalando/go-keyring)
 
-`go-keyring` is an OS agnostic library for *setting*, *getting* and *deleting*
-secrets from the system keyring. It currently support **OS X** and **Linux
+`go-keyring` is an OS-agnostic library for *setting*, *getting* and *deleting*
+secrets from the system keyring. It currently supports **OS X** and **Linux
 (dbus)**. A NO-OP implementation for Windows is also included to make it
 portable.
 
-The library was created due to lack of better alternatives and a need for using
-it in statically linked binaries which is cumbersome when relying on C bindings
-like other keyring libraries do.
+go-keyring was created after its authors searched for, but couldn't find, a better alternative. It aims to simplify
+using statically linked binaries, which is cumbersome when relying on C bindings (as other keyring libraries do).
 
-#### For who is it useful?
+#### Potential Uses
 
-The library is useful for any application that needs to store user credentials
-locally on the users machine. For instance if you are writing a CLI for an API
-which require username and password, then you can store this information in the
+If you're working with an application that needs to store user credentials
+locally on the user's machine, go-keyring might come in handy. For instance, if you are writing a CLI for an API
+that requires a username and password, you can store this information in the
 keyring instead of having the user type it on every invocation.
 
 ## Dependencies
@@ -29,20 +28,20 @@ interfacing with the OS X keychain. It should be available by default.
 #### Linux
 
 The Linux implementation depends on the [Secret Service][SecretService] dbus
-interface which is provided by `gnome-keyring`.
+interface, which is provided by [GNOME Keyring](https://wiki.gnome.org/Projects/GnomeKeyring).
 
-It's expected that the default collection `login` exists in the keyring, this
-is default in most distros. If it doesn't exist you can create it through the
-keyring frontend program `seahorse`.
+It's expected that the default collection `login` exists in the keyring, because
+it's the default in most distros. If it doesn't exist, you can create it through the
+keyring frontend program [Seahorse](https://wiki.gnome.org/Apps/Seahorse):
 
  * Open `seahorse`
  * Go to **File > New > Password Keyring**
  * Click **Continue**
  * When asked for a name, use: **login**
 
-## Example usage
+## Example Usage
 
-How to *set* and *get* a secret from the keyring.
+How to *set* and *get* a secret from the keyring:
 
 ```go
 package main
@@ -75,22 +74,21 @@ func main() {
 
 ```
 
-
 ## Tests
 
-Running the tests is simple, just run:
+Running the tests is simple:
 
 ```
 go test
 ```
 
-however they depend on your OS. E.g. if you run the tests on **Linux** it will
-test the implementation in `keyring_linux.go` and similar if running the tests
-in **OS X** it will test the implementation in `keyring_darwin.go`.
+Which OS you use *does* matter. If you're using **Linux**, it will
+test the implementation in `keyring_linux.go`. If running the tests
+on **OS X**, it will test the implementation in `keyring_darwin.go`.
 
 ## Contributing/TODO
 
-We welcome contributions from the community. Please use [CONTRIBUTING.md](CONTRIBUTING.md) as guideline. To help you get started, here are some items that we'd love help with:
+We welcome contributions from the community; please use [CONTRIBUTING.md](CONTRIBUTING.md) as your guidelines for getting started. Here are some items that we'd love help with:
 
 - [Windows support](https://github.com/zalando/go-keyring/issues/3)
 - [Travis Linux](https://github.com/zalando/go-keyring/issues/1)
@@ -101,13 +99,13 @@ Please use GitHub issues as the starting point for contributions, new ideas and/
 ## Contact
 
 * E-Mail: team-teapot@zalando.de
-* Security issues: Please send an email to [maintainers](MAINTAINERS). We'll try to get back to you within two workdays. If you don't hear back, then send an email to team-teapot@zalando.de and wait additional 5 days. We consider these as maximum for reply time.
+* Security issues: Please send an email to the [maintainers](MAINTAINERS), and we'll try to get back to you within two workdays. If you don't hear back, send an email to team-teapot@zalando.de and someone will respond within five days max.
 
 ## Contributors
 
 Thanks to:
 
-- <your name here>
+- [your name here]
 
 ## License
 
