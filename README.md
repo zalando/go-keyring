@@ -1,5 +1,5 @@
-# Go keyring library
-[![Go Report Card](https://goreportcard.com/badge/zalando/go-keyring)](https://goreportcard.com/report/zalando/go-keyring)
+# Go Keyring library
+[![Go Report Card](https://goreportcard.com/badge/github.com/zalando/go-keyring)](https://goreportcard.com/report/github.com/zalando/go-keyring)
 [![GoDoc](https://godoc.org/github.com/zalando/go-keyring?status.svg)](https://godoc.org/github.com/zalando/go-keyring)
 
 `go-keyring` is an OS agnostic library for *setting*, *getting* and *deleting*
