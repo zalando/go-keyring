@@ -8,6 +8,17 @@ secrets from the system keyring. It currently support **OS X** and **Linux
 (dbus)**. A NO-OP implementation for Windows is also included to make it
 portable.
 
+The library was created due to lack of better alternatives and a need for using
+it in statically linked binaries which is cumbersome when relying on C bindings
+like other keyring libraries do.
+
+#### For who is it useful?
+
+The library is useful for any application that needs to store user credentials
+locally on the users machine. For instance if you are writing a CLI for an API
+which require username and password, then you can store this information in the
+keyring instead of having the user type it on every invocation.
+
 ## Dependencies
 
 #### OS X
@@ -29,7 +40,7 @@ keyring frontend program `seahorse`.
  * Click **Continue**
  * When asked for a name, use: **login**
 
-## Usage
+## Example usage
 
 How to *set* and *get* a secret from the keyring.
 
