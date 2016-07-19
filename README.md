@@ -76,10 +76,29 @@ however they depend on your OS. E.g. if you run the tests on **Linux** it will
 test the implementation in `keyring_linux.go` and similar if running the tests
 in **OS X** it will test the implementation in `keyring_darwin.go`.
 
+## Contributing/TODO
+
+We welcome contributions from the community. Please use [CONTRIBUTING.md](CONTRIBUTING.md) as guideline. To help you get started, here are some items that we'd love help with:
+
+- Windows support
+- The code base
+
+Please use GitHub issues as the starting point for contributions, new ideas and/or bug reports.
+
+## Contact
+
+* E-Mail: team-teapot@zalando.de
+* Security issues: Please send an email to [maintainers](MAINTAINERS). We'll try to get back to you within two workdays. If you don't hear back, then send an email to team-teapot@zalando.de and wait additional 5 days. We consider these as maximum for reply time.
+
+## Contributors
+
+Thanks to:
+
+- <your name here>
+
 ## License
 
 See [LICENSE](LICENSE) file.
 
 
 [SecretService]: https://standards.freedesktop.org/secret-service/
-
