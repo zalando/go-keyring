@@ -91,7 +91,6 @@ on **OS X**, it will test the implementation in `keyring_darwin.go`.
 We welcome contributions from the community; please use [CONTRIBUTING.md](CONTRIBUTING.md) as your guidelines for getting started. Here are some items that we'd love help with:
 
 - [Windows support](https://github.com/zalando/go-keyring/issues/3)
-- [Travis Linux](https://github.com/zalando/go-keyring/issues/1)
 - The code base
 
 Please use GitHub issues as the starting point for contributions, new ideas and/or bug reports.
