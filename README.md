@@ -1,12 +1,12 @@
 # Go Keyring library
 [![Build Status](https://travis-ci.org/zalando/go-keyring.svg?branch=master)](https://travis-ci.org/zalando/go-keyring)
+[![Build status](https://ci.appveyor.com/api/projects/status/l8hdbqng769sc2c5/branch/master?svg=true)](https://ci.appveyor.com/project/mikkeloscar/go-keyring/branch/master)
 [![Go Report Card](https://goreportcard.com/badge/github.com/zalando/go-keyring)](https://goreportcard.com/report/github.com/zalando/go-keyring)
 [![GoDoc](https://godoc.org/github.com/zalando/go-keyring?status.svg)](https://godoc.org/github.com/zalando/go-keyring)
 
 `go-keyring` is an OS-agnostic library for *setting*, *getting* and *deleting*
-secrets from the system keyring. It currently supports **OS X** and **Linux
-(dbus)**. A NO-OP implementation for Windows is also included to make it
-portable.
+secrets from the system keyring. It supports **OS X**, **Linux (dbus)** and
+**Windows**.
 
 go-keyring was created after its authors searched for, but couldn't find, a better alternative. It aims to simplify
 using statically linked binaries, which is cumbersome when relying on C bindings (as other keyring libraries do).
@@ -90,8 +90,8 @@ on **OS X**, it will test the implementation in `keyring_darwin.go`.
 
 We welcome contributions from the community; please use [CONTRIBUTING.md](CONTRIBUTING.md) as your guidelines for getting started. Here are some items that we'd love help with:
 
-- [Windows support](https://github.com/zalando/go-keyring/issues/3)
 - The code base
+- Better test coverage
 
 Please use GitHub issues as the starting point for contributions, new ideas and/or bug reports.
 

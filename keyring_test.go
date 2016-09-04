@@ -48,3 +48,11 @@ func TestDelete(t *testing.T) {
 		t.Errorf("Should not fail, got: %s", err)
 	}
 }
+
+// TestDeleteNonExisting tests deleting a secret not in the keyring.
+func TestDeleteNonExisting(t *testing.T) {
+	err := Delete(service, user+"fake")
+	if err != ErrNotFound {
+		t.Errorf("Expected error ErrNotFound, got %s", err)
+	}
+}
