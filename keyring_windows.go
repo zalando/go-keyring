@@ -1,23 +1,48 @@
 package keyring
 
+import "github.com/danieljoos/wincred"
+
+const errNotFound = "Element not found."
+
 type windowsKeychain struct{}
 
-// Get gets a secret from the keyring given a service name and a user. This
-// method is currently a NO-OP on windows.
+// Get gets a secret from the keyring given a service name and a user.
 func (k windowsKeychain) Get(service, username string) (string, error) {
-	return nil, ErrNotFound
+	cred, err := wincred.GetGenericCredential(k.credName(service, username))
+	if err != nil {
+		if err.Error() == errNotFound {
+			return "", ErrNotFound
+		}
+		return "", err
+	}
+
+	return string(cred.CredentialBlob), nil
 }
 
 // Set stores stores user and pass in the keyring under the defined service
-// name. This method is currently a NO-OP on windows.
+// name.
 func (k windowsKeychain) Set(service, username, password string) error {
-	return nil
+	cred := wincred.NewGenericCredential(k.credName(service, username))
+	cred.CredentialBlob = []byte(password)
+	return cred.Write()
 }
 
 // Delete deletes a secret, identified by service & user, from the keyring.
-// This method is currently a NO-OP on windows.
-func (k MacOSXKeychain) Delete(service, username string) error {
-	return nil
+func (k windowsKeychain) Delete(service, username string) error {
+	cred, err := wincred.GetGenericCredential(k.credName(service, username))
+	if err != nil {
+		if err.Error() == errNotFound {
+			return ErrNotFound
+		}
+		return err
+	}
+
+	return cred.Delete()
+}
+
+// credName combines service and username to a single string.
+func (k windowsKeychain) credName(service, username string) string {
+	return service + ":" + username
 }
 
 func init() {
