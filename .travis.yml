@@ -12,6 +12,8 @@ go:
   - tip
 
 before_install:
+  - go get github.com/mattn/goveralls
+  - go get golang.org/x/tools/cmd/cover
   - |
     if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then
       sudo apt-get -qq update
@@ -25,3 +27,5 @@ before_script:
       dbus-launch /usr/bin/python -c \
         "import gnomekeyring;gnomekeyring.create_sync('login', '');"
     fi
+script:
+  - $HOME/gopath/bin/goveralls -service=travis-ci
