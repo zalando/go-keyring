@@ -57,6 +57,11 @@ func (s secretServiceProvider) findItem(svc *ss.SecretService, service, user str
 		"service":  service,
 	}
 
+	err := svc.Unlock(collection.Path())
+	if err != nil {
+		return "", err
+	}
+
 	results, err := svc.SearchItems(collection, search)
 	if err != nil {
 		return "", err
