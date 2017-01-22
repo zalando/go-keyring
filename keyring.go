@@ -4,7 +4,7 @@ import "fmt"
 
 // provider set in the init function by the relevant os file e.g.:
 // keyring_linux.go
-var provider keyring
+var provider Keyring
 
 var (
 	// ErrNotFound is the expected error if the secret isn't found in the
@@ -12,8 +12,8 @@ var (
 	ErrNotFound = fmt.Errorf("secret not found in keyring")
 )
 
-// keyring provides a simple set/get interface for a keyring service.
-type keyring interface {
+// Keyring provides a simple set/get interface for a keyring service.
+type Keyring interface {
 	// Set password in keyring for user.
 	Set(service, user, password string) error
 	// Get password from keyring given service and user name.

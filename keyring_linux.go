@@ -9,7 +9,7 @@ import (
 
 type secretServiceProvider struct{}
 
-// Set stores stores user and pass in the keyring under the defined service
+// Set stores user and pass in the keyring under the defined service
 // name.
 func (s secretServiceProvider) Set(service, user, pass string) error {
 	svc, err := ss.NewSecretService()
