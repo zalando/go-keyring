@@ -1,8 +1,8 @@
 approvals:
-  minimum: 2
-  from:
-    orgs:
-      - zalando
+  groups:
+    zalando:
+      minimum: 2
+      from:
+        orgs:
+          - "zalando"
 X-Zalando-Team: teapot
-# one of [code, doc, config, tools, secrets]
-X-Zalando-Type: code
