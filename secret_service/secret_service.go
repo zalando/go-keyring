@@ -72,7 +72,7 @@ func (s *SecretService) GetCollection(name string) dbus.BusObject {
 	return s.Object(serviceName, dbus.ObjectPath(collectionBasePath+name))
 }
 
-// Unlock unlocks a collection
+// Unlock unlocks a collection.
 func (s *SecretService) Unlock(collection dbus.ObjectPath) error {
 	var unlocked []dbus.ObjectPath
 	var prompt dbus.ObjectPath
@@ -93,7 +93,7 @@ func (s *SecretService) Unlock(collection dbus.ObjectPath) error {
 	}
 
 	if len(unlocked) != 1 || unlocked[0] != collection {
-		return fmt.Errorf("failed to unlock correct collection")
+		return fmt.Errorf("failed to unlock correct collection '%v'", collection)
 	}
 
 	return nil
