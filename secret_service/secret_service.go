@@ -93,7 +93,7 @@ func (s *SecretService) Unlock(collection dbus.ObjectPath) error {
 	}
 
 	if len(unlocked) != 1 || unlocked[0] != collection {
-		return fmt.Errorf("failed to unlock correct collection '%s'", collection)
+		return fmt.Errorf("failed to unlock correct collection '%v'", collection)
 	}
 
 	return nil
