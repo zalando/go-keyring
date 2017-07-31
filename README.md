@@ -75,7 +75,7 @@ func main() {
 ```
 
 ## Tests
-
+### Running tests
 Running the tests is simple:
 
 ```
@@ -85,6 +85,38 @@ go test
 Which OS you use *does* matter. If you're using **Linux**, it will
 test the implementation in `keyring_linux.go`. If running the tests
 on **OS X**, it will test the implementation in `keyring_darwin.go`.
+
+### Mocking
+If you need to mock the keyring behavior for testing on systems without a keyring implementation you can call `MockInit()` which will replace the OS defined provider with an in-memory one.
+
+```go
+package implementation
+
+import (
+    "testing"
+
+    "github.com/zalando/go-keyring"
+)
+
+func TestMockedSetGet(t *testing.T) {
+    keyring.MockInit()
+    err := keyring.Set("service", "user", "password")
+    if err != nil {
+        t.Fatal(err)
+    }
+
+    p, err := keyring.Get("service", "user")
+    if err != nil {
+        t.Fatal(err)
+    }
+
+    if p != "password" {
+        t.Error("password was not the expected string")
+    }
+
+}
+
+```
 
 ## Contributing/TODO
 
