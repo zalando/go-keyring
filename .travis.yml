@@ -11,6 +11,7 @@ addons:
   apt:
     packages:
       - python-gnomekeyring
+      - gnome-keyring
 
 go:
   - 1.6
