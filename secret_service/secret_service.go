@@ -7,15 +7,17 @@ import (
 )
 
 const (
-	serviceName         = "org.freedesktop.secrets"
-	servicePath         = "/org/freedesktop/secrets"
-	serviceInterface    = "org.freedesktop.Secret.Service"
-	collectionInterface = "org.freedesktop.Secret.Collection"
-	itemInterface       = "org.freedesktop.Secret.Item"
-	sessionInterface    = "org.freedesktop.Secret.Session"
-	promptInterface     = "org.freedesktop.Secret.Prompt"
+	serviceName          = "org.freedesktop.secrets"
+	servicePath          = "/org/freedesktop/secrets"
+	serviceInterface     = "org.freedesktop.Secret.Service"
+	collectionInterface  = "org.freedesktop.Secret.Collection"
+	collectionsInterface = "org.freedesktop.Secret.Service.Collections"
+	itemInterface        = "org.freedesktop.Secret.Item"
+	sessionInterface     = "org.freedesktop.Secret.Session"
+	promptInterface      = "org.freedesktop.Secret.Prompt"
 
-	collectionBasePath = "/org/freedesktop/secrets/collection/"
+	loginCollectionAlias = "/org/freedesktop/secrets/aliases/default"
+	collectionBasePath   = "/org/freedesktop/secrets/collection/"
 )
 
 // Secret defines a org.freedesk.Secret.Item secret struct.
@@ -67,9 +69,33 @@ func (s *SecretService) OpenSession() (dbus.BusObject, error) {
 	return s.Object(serviceName, sessionPath), nil
 }
 
+// GetCollections returns list of available collections
+func (s *SecretService) CheckCollectionPath(path dbus.ObjectPath) (bool, error) {
+	obj := s.Conn.Object(serviceName, servicePath)
+	val, err := obj.GetProperty(collectionsInterface)
+	if err != nil {
+		return false, err
+	}
+	paths := val.Value().([]dbus.ObjectPath)
+	for _, p := range paths {
+		if p == path {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 // GetCollection returns a collection from a name.
 func (s *SecretService) GetCollection(name string) dbus.BusObject {
 	return s.Object(serviceName, dbus.ObjectPath(collectionBasePath+name))
+}
+
+func (s *SecretService) GetLoginCollection() dbus.BusObject {
+	path := dbus.ObjectPath(collectionBasePath + "login")
+	if ok, err := s.CheckCollectionPath(path); err != nil || !ok {
+		path = dbus.ObjectPath(loginCollectionAlias)
+	}
+	return s.Object(serviceName, path)
 }
 
 // Unlock unlocks a collection.

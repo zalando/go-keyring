@@ -2,7 +2,6 @@ package keyring
 
 import (
 	"fmt"
-
 	"github.com/godbus/dbus"
 	"github.com/zalando/go-keyring/secret_service"
 )
@@ -31,7 +30,7 @@ func (s secretServiceProvider) Set(service, user, pass string) error {
 
 	secret := ss.NewSecret(session.Path(), pass)
 
-	collection := svc.GetCollection("login")
+	collection := svc.GetLoginCollection()
 
 	err = svc.Unlock(collection.Path())
 	if err != nil {
@@ -50,7 +49,7 @@ func (s secretServiceProvider) Set(service, user, pass string) error {
 
 // findItem looksup an item by service and user.
 func (s secretServiceProvider) findItem(svc *ss.SecretService, service, user string) (dbus.ObjectPath, error) {
-	collection := svc.GetCollection("login")
+	collection := svc.GetLoginCollection()
 
 	search := map[string]string{
 		"username": user,
