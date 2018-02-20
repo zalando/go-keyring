@@ -14,7 +14,7 @@ addons:
       - gnome-keyring
 
 go:
-  - 1.6
+  - 1.x
   - tip
 
 before_script:
