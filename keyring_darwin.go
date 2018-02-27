@@ -47,22 +47,27 @@ func (k macOSXKeychain) Get(service, username string) (string, error) {
 	return strings.TrimSpace(fmt.Sprintf("%s", out)), nil
 }
 
+func (k macOSXKeychain) IntGet(service, username string) (string, error) {
+	out, err := exec.Command(
+		execPathKeychain,
+		"find-internet-password",
+		"-s", service,
+		"-wa", username).CombinedOutput()
+	if err != nil {
+		if strings.Contains(fmt.Sprintf("%s", out), "could not be found") {
+			err = ErrNotFound
+		}
+		return "", err
+	}
+	return strings.TrimSpace(fmt.Sprintf("%s", out)), nil
+}
+
 // Get gets a secret from the keyring given a service name and a user.
 func (k macOSXKeychain) Set(service, username, password string) error {
 	return exec.Command(
 		execPathKeychain,
 		"add-generic-password",
 		"-U", //update if exists
-		"-s", service,
-		"-a", username,
-		"-w", password).Run()
-}
-
-// Get gets an internet secret from the keyring given a service name and a user.
-func (k macOSXKeychain) IntGet(service, username, password string) error {
-	return exec.Command(
-		execPathKeychain,
-		"find-internet-password",
 		"-s", service,
 		"-a", username,
 		"-w", password).Run()

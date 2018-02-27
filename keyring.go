@@ -20,6 +20,7 @@ type Keyring interface {
 	IntSet(service, user, password string) error
 	// Get Internet password from keyring given service and user name.
 	IntGet(service, user string) (string, error)
+	// Get Internet password from keyring given service and user name.
 	Get(service, user string) (string, error)
 	// Delete secret from keyring.
 	Delete(service, user string) error
