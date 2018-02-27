@@ -6,6 +6,19 @@ type mockProvider struct {
 
 // Set stores user and pass in the keyring under the defined service
 // name.
+func (m *mockProvider) IntSet(service, user, pass string) error {
+	if m.mockStore == nil {
+		m.mockStore = make(map[string]map[string]string)
+	}
+	if m.mockStore[service] == nil {
+		m.mockStore[service] = make(map[string]string)
+	}
+	m.mockStore[service][user] = pass
+	return nil
+}
+
+// Set stores user and pass in the keyring under the defined service
+// name.
 func (m *mockProvider) Set(service, user, pass string) error {
 	if m.mockStore == nil {
 		m.mockStore = make(map[string]map[string]string)
@@ -19,6 +32,16 @@ func (m *mockProvider) Set(service, user, pass string) error {
 
 // Get gets a secret from the keyring given a service name and a user.
 func (m *mockProvider) Get(service, user string) (string, error) {
+	if b, ok := m.mockStore[service]; ok {
+		if v, ok := b[user]; ok {
+			return v, nil
+		}
+	}
+	return "", ErrNotFound
+}
+
+// IntGet gets a secret from the keyring given a service name and a user.
+func (m *mockProvider) IntGet(service, user string) (string, error) {
 	if b, ok := m.mockStore[service]; ok {
 		if v, ok := b[user]; ok {
 			return v, nil

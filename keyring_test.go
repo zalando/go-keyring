@@ -16,8 +16,33 @@ func TestSet(t *testing.T) {
 	}
 }
 
-// TestGet tests getting a password from the keyring.
+// TestIntSet tests setting a user and password in the keyring.
+func TestIntSet(t *testing.T) {
+	err := Set(service, user, password)
+	if err != nil {
+		t.Errorf("Should not fail, got: %s", err)
+	}
+}
+
+// TestIntGet tests getting a password from the keyring.
 func TestGet(t *testing.T) {
+	err := Set(service, user, password)
+	if err != nil {
+		t.Errorf("Should not fail, got: %s", err)
+	}
+
+	pw, err := Get(service, user)
+	if err != nil {
+		t.Errorf("Should not fail, got: %s", err)
+	}
+
+	if password != pw {
+		t.Errorf("Expected password %s, got %s", password, pw)
+	}
+}
+
+// TestGet tests getting a password from the keyring.
+func TestIntGet(t *testing.T) {
 	err := Set(service, user, password)
 	if err != nil {
 		t.Errorf("Should not fail, got: %s", err)
