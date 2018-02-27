@@ -58,6 +58,27 @@ func (k macOSXKeychain) Set(service, username, password string) error {
 		"-w", password).Run()
 }
 
+// Get gets an internet secret from the keyring given a service name and a user.
+func (k macOSXKeychain) IntGet(service, username, password string) error {
+	return exec.Command(
+		execPathKeychain,
+		"find-internet-password",
+		"-s", service,
+		"-a", username,
+		"-w", password).Run()
+}
+
+// Get sets a secret from the keyring given a service name and a user.
+func (k macOSXKeychain) IntSet(service, username, password string) error {
+	return exec.Command(
+		execPathKeychain,
+		"set-internet-password",
+		"-U", //update if exists
+		"-s", service,
+		"-a", username,
+		"-w", password).Run()
+}
+
 // Delete deletes a secret, identified by service & user, from the keyring.
 func (k macOSXKeychain) Delete(service, username string) error {
 	out, err := exec.Command(
