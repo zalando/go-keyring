@@ -16,7 +16,10 @@ var (
 type Keyring interface {
 	// Set password in keyring for user.
 	Set(service, user, password string) error
-	// Get password from keyring given service and user name.
+	// Set Internet password in keyring for user.
+	IntSet(service, user, password string) error
+	// Get Internet password from keyring given service and user name.
+	IntGet(service, user string) (string, error)
 	Get(service, user string) (string, error)
 	// Delete secret from keyring.
 	Delete(service, user string) error
@@ -25,6 +28,16 @@ type Keyring interface {
 // Set password in keyring for user.
 func Set(service, user, password string) error {
 	return provider.Set(service, user, password)
+}
+
+// IntSet set Internet password in keyring for user.
+func IntSet(service, user, password string) error {
+	return provider.IntSet(service, user, password)
+}
+
+// IntGet get internet password from keyring given service and user name.
+func IntGet(service, user string) (string, error) {
+	return provider.IntGet(service, user)
 }
 
 // Get password from keyring given service and user name.
