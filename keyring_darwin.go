@@ -16,6 +16,7 @@ package keyring
 
 import (
 	"fmt"
+	"io"
 	"os/exec"
 	"strings"
 )
@@ -49,13 +50,33 @@ func (k macOSXKeychain) Get(service, username string) (string, error) {
 
 // Get gets a secret from the keyring given a service name and a user.
 func (k macOSXKeychain) Set(service, username, password string) error {
-	return exec.Command(
+	cmd := exec.Command(
 		execPathKeychain,
-		"add-generic-password",
-		"-U", //update if exists
-		"-s", service,
-		"-a", username,
-		"-w", password).Run()
+		"-i", // start in interactive mode to be able to pass the password using stdIn.
+	)
+
+	stdIn, err := cmd.StdinPipe()
+	if err != nil {
+		return err
+	}
+
+	err = cmd.Start()
+	if err != nil {
+		return err
+	}
+
+	// Write the command to stdIn.
+	command := fmt.Sprintf("add-generic-password -U -s %s -a %s -w %s\n", service, username, password)
+	io.WriteString(stdIn, command)
+
+	err = stdIn.Close()
+	if err != nil {
+		return err
+	}
+
+	err = cmd.Wait()
+
+	return err
 }
 
 // Delete deletes a secret, identified by service & user, from the keyring.
