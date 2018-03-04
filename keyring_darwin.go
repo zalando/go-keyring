@@ -31,8 +31,7 @@ type macOSXKeychain struct{}
 // 	return exec.Command(execPathKeychain).Run() != exec.ErrNotFound
 // }
 
-// Set stores stores user and pass in the keyring under the defined service
-// name.
+// Get gets a secret from the keyring given a service name and a user.
 func (k macOSXKeychain) Get(service, username string) (string, error) {
 	out, err := exec.Command(
 		execPathKeychain,
@@ -48,7 +47,8 @@ func (k macOSXKeychain) Get(service, username string) (string, error) {
 	return strings.TrimSpace(fmt.Sprintf("%s", out)), nil
 }
 
-// Get gets a secret from the keyring given a service name and a user.
+// Set stores stores user and pass in the keyring under the defined service
+// name.
 func (k macOSXKeychain) Set(service, username, password string) error {
 	cmd := exec.Command(
 		execPathKeychain,
