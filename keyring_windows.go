@@ -23,6 +23,7 @@ func (k windowsKeychain) Get(service, username string) (string, error) {
 // name.
 func (k windowsKeychain) Set(service, username, password string) error {
 	cred := wincred.NewGenericCredential(k.credName(service, username))
+	cred.UserName = username
 	cred.CredentialBlob = []byte(password)
 	return cred.Write()
 }
