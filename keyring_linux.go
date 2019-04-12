@@ -2,8 +2,8 @@ package keyring
 
 import (
 	"fmt"
-
 	"github.com/godbus/dbus"
+	"github.com/ainmosni/go-keyring/secret_service"
 )
 
 type secretServiceProvider struct{}
@@ -75,14 +75,21 @@ func (s secretServiceProvider) findItem(svc *ss.SecretService, search map[string
 
 // Get gets a secret from the keyring given a service name and a user.
 func (s secretServiceProvider) Get(service, user string) (string, error) {
+	return s.find(map[string][string]{
+		"username": user,
+		"service": service,
+	})
+}
+
+// Query does a custom keychain query, for entries that don't follow service/user.
+func (s secretServiceProvider) Query(query map[string]string) (string, error) {
+	return s.find(query)
+}
+
+func (s secretServiceProvider) find(search map[string]string) (string, error) {
 	svc, err := ss.NewSecretService()
 	if err != nil {
 		return "", err
-	}
-
-	search := map[string]string{
-		"username": user,
-		"service":  service,
 	}
 
 	item, err := s.findItem(svc, search)
@@ -105,8 +112,6 @@ func (s secretServiceProvider) Get(service, user string) (string, error) {
 	return string(secret.Value), nil
 }
 
-// Query does a custom keychain query, for entries that don't follow service/user.
-func (s secretServiceProvider) Query(query map[string]string)
 
 // Delete deletes a secret, identified by service & user, from the keyring.
 func (s secretServiceProvider) Delete(service, user string) error {
