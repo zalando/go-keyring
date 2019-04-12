@@ -20,6 +20,8 @@ type Keyring interface {
 	Get(service, user string) (string, error)
 	// Delete secret from keyring.
 	Delete(service, user string) error
+	// Query secret from keyring using a custom query
+	Query(query map[string]string) (string, error)
 }
 
 // Set password in keyring for user.
@@ -30,6 +32,11 @@ func Set(service, user, password string) error {
 // Get password from keyring given service and user name.
 func Get(service, user string) (string, error) {
 	return provider.Get(service, user)
+}
+
+// Query does a custom query from keyring given a custom map.
+func Query(query map[string]string) (string, error) {
+	return provider.Query(query)
 }
 
 // Delete secret from keyring.
