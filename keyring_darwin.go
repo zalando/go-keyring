@@ -15,6 +15,7 @@
 package keyring
 
 import (
+	"encoding/hex"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -44,7 +45,14 @@ func (k macOSXKeychain) Get(service, username string) (string, error) {
 		}
 		return "", err
 	}
-	return strings.TrimSpace(fmt.Sprintf("%s", out)), nil
+	// if the added secret has multiple lines, osx will hex encode it
+	trimStr := strings.TrimSpace(string(out[:]))
+	dec, err := hex.DecodeString(trimStr)
+	// if there was an error hex decoding the string, assume it's not encoded
+	if err != nil {
+		return fmt.Sprintf("%s", trimStr), nil
+	}
+	return fmt.Sprintf("%s", dec), err
 }
 
 // Set stores a secret in the keyring given a service name and a user.

@@ -16,6 +16,28 @@ func TestSet(t *testing.T) {
 	}
 }
 
+// TestGetMultiline tests getting a multi-line password from the keyring
+func TestGetMultiLine(t *testing.T) {
+	multilinePassword := `this password
+has multiple
+lines and will be
+encoded by some keyring implementiations
+like osx`
+	err := Set(service, user, multilinePassword)
+	if err != nil {
+		t.Errorf("Should not fail, got: %s", err)
+	}
+
+	pw, err := Get(service, user)
+	if err != nil {
+		t.Errorf("Should not fail, got: %s", err)
+	}
+
+	if multilinePassword != pw {
+		t.Errorf("Expected password %s, got %s", multilinePassword, pw)
+	}
+}
+
 // TestGet tests getting a password from the keyring.
 func TestGet(t *testing.T) {
 	err := Set(service, user, password)
