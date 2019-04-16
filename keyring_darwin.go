@@ -55,7 +55,7 @@ func (k macOSXKeychain) Get(service, username string) (string, error) {
 	return fmt.Sprintf("%s", dec), err
 }
 
-// Get gets a secret from the keyring given a service name and a user.
+// Set stores a secret in the keyring given a service name and a user.
 func (k macOSXKeychain) Set(service, username, password string) error {
 	return exec.Command(
 		execPathKeychain,
