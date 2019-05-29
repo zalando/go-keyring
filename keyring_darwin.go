@@ -48,12 +48,13 @@ func (k macOSXKeychain) Get(service, username string) (string, error) {
 		}
 		return "", err
 	}
-	// if the added secret has multiple lines, osx will hex encode it
+
 	trimStr := strings.TrimSpace(string(out[:]))
-	dec, err := hex.DecodeString(trimStr)
-	// if there was no error hex decoding the string and it has the well-known prefix, assume it's encoded
-	if err == nil && strings.HasPrefix(string(dec), encodingPrefix) {
-		return fmt.Sprintf("%s", dec[len(encodingPrefix):]), nil
+	// if the string has the well-known prefix, assume it's encoded
+	if strings.HasPrefix(trimStr, encodingPrefix) {
+		if dec, err := hex.DecodeString(trimStr[len(encodingPrefix):]); err == nil {
+			return fmt.Sprintf("%s", dec), nil
+		}
 	}
 
 	return trimStr, nil
@@ -64,7 +65,7 @@ func (k macOSXKeychain) Set(service, username, password string) error {
 	// if the added secret has multiple lines, osx will hex encode it
 	// identify this with a well-known prefix.
 	if strings.ContainsRune(password, '\n') {
-		password = hex.EncodeToString([]byte(encodingPrefix + password))
+		password = encodingPrefix + hex.EncodeToString([]byte(password))
 	}
 
 	return exec.Command(
