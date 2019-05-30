@@ -52,9 +52,8 @@ func (k macOSXKeychain) Get(service, username string) (string, error) {
 	trimStr := strings.TrimSpace(string(out[:]))
 	// if the string has the well-known prefix, assume it's encoded
 	if strings.HasPrefix(trimStr, encodingPrefix) {
-		if dec, err := hex.DecodeString(trimStr[len(encodingPrefix):]); err == nil {
-			return fmt.Sprintf("%s", dec), nil
-		}
+		dec, err := hex.DecodeString(trimStr[len(encodingPrefix):])
+		return fmt.Sprintf("%s", dec), err
 	}
 
 	return trimStr, nil
