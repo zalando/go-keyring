@@ -23,6 +23,9 @@ import (
 
 const (
 	execPathKeychain = "/usr/bin/security"
+
+	// encodingPrefix is a well-known prefix added to strings encoded by Set.
+	encodingPrefix = "go-keyring-encoded:"
 )
 
 type macOSXKeychain struct{}
@@ -45,18 +48,25 @@ func (k macOSXKeychain) Get(service, username string) (string, error) {
 		}
 		return "", err
 	}
-	// if the added secret has multiple lines, osx will hex encode it
+
 	trimStr := strings.TrimSpace(string(out[:]))
-	dec, err := hex.DecodeString(trimStr)
-	// if there was an error hex decoding the string, assume it's not encoded
-	if err != nil {
-		return fmt.Sprintf("%s", trimStr), nil
+	// if the string has the well-known prefix, assume it's encoded
+	if strings.HasPrefix(trimStr, encodingPrefix) {
+		dec, err := hex.DecodeString(trimStr[len(encodingPrefix):])
+		return string(dec), err
 	}
-	return fmt.Sprintf("%s", dec), err
+
+	return trimStr, nil
 }
 
 // Set stores a secret in the keyring given a service name and a user.
 func (k macOSXKeychain) Set(service, username, password string) error {
+	// if the added secret has multiple lines, osx will hex encode it
+	// identify this with a well-known prefix.
+	if strings.ContainsRune(password, '\n') {
+		password = encodingPrefix + hex.EncodeToString([]byte(password))
+	}
+
 	return exec.Command(
 		execPathKeychain,
 		"add-generic-password",
