@@ -4,7 +4,7 @@ import "fmt"
 
 // provider set in the init function by the relevant os file e.g.:
 // keyring_linux.go
-var provider Keyring
+var provider Keyring = fallbackServiceProvider{}
 
 var (
 	// ErrNotFound is the expected error if the secret isn't found in the
