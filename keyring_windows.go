@@ -1,8 +1,9 @@
 package keyring
 
-import "github.com/danieljoos/wincred"
-
-const errNotFound = "Element not found."
+import (
+	"github.com/danieljoos/wincred"
+	"syscall"
+)
 
 type windowsKeychain struct{}
 
@@ -10,7 +11,7 @@ type windowsKeychain struct{}
 func (k windowsKeychain) Get(service, username string) (string, error) {
 	cred, err := wincred.GetGenericCredential(k.credName(service, username))
 	if err != nil {
-		if err.Error() == errNotFound {
+		if err == syscall.ERROR_NOT_FOUND {
 			return "", ErrNotFound
 		}
 		return "", err
@@ -32,7 +33,7 @@ func (k windowsKeychain) Set(service, username, password string) error {
 func (k windowsKeychain) Delete(service, username string) error {
 	cred, err := wincred.GetGenericCredential(k.credName(service, username))
 	if err != nil {
-		if err.Error() == errNotFound {
+		if err == syscall.ERROR_NOT_FOUND {
 			return ErrNotFound
 		}
 		return err
