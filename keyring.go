@@ -1,6 +1,8 @@
 package keyring
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // provider set in the init function by the relevant os file e.g.:
 // keyring_linux.go
@@ -35,4 +37,45 @@ func Get(service, user string) (string, error) {
 // Delete secret from keyring.
 func Delete(service, user string) error {
 	return provider.Delete(service, user)
+}
+
+// CustomKeyring allows to use custom keyring names
+type CustomKeyring struct {
+	keyring     Keyring
+	keyringName string
+}
+
+// NewCustomKeyring create a new custom keyring.
+// A custom keyring allows you to use a custom
+// keyring name on supported platforms
+func NewCustomKeyring(name string) *CustomKeyring {
+	ck := CustomKeyring{
+		keyringName: name,
+	}
+
+	// Set customs keyringprovider to current provider
+	ck.keyring = provider
+
+	// If provider is 'supported' set its keyring name
+	if pv, ok := provider.(secretServiceProvider); ok {
+		pv.keyringName = name
+		ck.keyring = pv
+	}
+
+	return &ck
+}
+
+// Set password in keyring for user.
+func (ck *CustomKeyring) Set(service, user, password string) error {
+	return ck.keyring.Set(service, user, password)
+}
+
+// Get password from keyring given service and user name.
+func (ck *CustomKeyring) Get(service, user string) (string, error) {
+	return ck.keyring.Get(service, user)
+}
+
+// Delete secret from keyring.
+func (ck *CustomKeyring) Delete(service, user string) error {
+	return ck.keyring.Delete(service, user)
 }

@@ -2,16 +2,20 @@ package keyring
 
 import (
 	"fmt"
+
 	"github.com/godbus/dbus"
-	"github.com/zalando/go-keyring/secret_service"
+	ss "github.com/zalando/go-keyring/secret_service"
 )
 
-type secretServiceProvider struct{}
+// secretServiceProvider linux provider
+type secretServiceProvider struct {
+	keyringName string
+}
 
 // Set stores user and pass in the keyring under the defined service
 // name.
 func (s secretServiceProvider) Set(service, user, pass string) error {
-	svc, err := ss.NewSecretService()
+	svc, err := ss.NewSecretService(s.keyringName)
 	if err != nil {
 		return err
 	}
@@ -30,7 +34,10 @@ func (s secretServiceProvider) Set(service, user, pass string) error {
 
 	secret := ss.NewSecret(session.Path(), pass)
 
-	collection := svc.GetLoginCollection()
+	collection, err := svc.GetCollectionForKeyring()
+	if err != nil {
+		return err
+	}
 
 	err = svc.Unlock(collection.Path())
 	if err != nil {
@@ -49,14 +56,17 @@ func (s secretServiceProvider) Set(service, user, pass string) error {
 
 // findItem looksup an item by service and user.
 func (s secretServiceProvider) findItem(svc *ss.SecretService, service, user string) (dbus.ObjectPath, error) {
-	collection := svc.GetLoginCollection()
+	collection, err := svc.GetCollectionForKeyring()
+	if err != nil {
+		return "", err
+	}
 
 	search := map[string]string{
 		"username": user,
 		"service":  service,
 	}
 
-	err := svc.Unlock(collection.Path())
+	err = svc.Unlock(collection.Path())
 	if err != nil {
 		return "", err
 	}
@@ -75,7 +85,7 @@ func (s secretServiceProvider) findItem(svc *ss.SecretService, service, user str
 
 // Get gets a secret from the keyring given a service name and a user.
 func (s secretServiceProvider) Get(service, user string) (string, error) {
-	svc, err := ss.NewSecretService()
+	svc, err := ss.NewSecretService(s.keyringName)
 	if err != nil {
 		return "", err
 	}
@@ -102,7 +112,7 @@ func (s secretServiceProvider) Get(service, user string) (string, error) {
 
 // Delete deletes a secret, identified by service & user, from the keyring.
 func (s secretServiceProvider) Delete(service, user string) error {
-	svc, err := ss.NewSecretService()
+	svc, err := ss.NewSecretService(s.keyringName)
 	if err != nil {
 		return err
 	}
