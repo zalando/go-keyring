@@ -1,6 +1,8 @@
 package keyring
 
-import "testing"
+import (
+	"testing"
+)
 
 const (
 	service  = "test-service"
@@ -94,5 +96,36 @@ func TestDeleteNonExisting(t *testing.T) {
 	err := Delete(service, user+"fake")
 	if err != ErrNotFound {
 		t.Errorf("Expected error ErrNotFound, got %s", err)
+	}
+}
+
+// TestCustomKeyringSet tests deleting a secret from a custom keyring.
+func TestCustomKeyringSet(t *testing.T) {
+	keyRing := NewCustomKeyring("_keyring_test")
+	err := keyRing.Set(service, user, password)
+	if err != nil {
+		t.Errorf("Should not fail: %s", err)
+	}
+}
+
+// TestCustomKeyringGet tests getting a password from a custom keyring.
+func TestCustomKeyringGet(t *testing.T) {
+	keyRing := NewCustomKeyring("_keyring_test")
+	pass, err := keyRing.Get(service, user)
+	if err != nil {
+		t.Errorf("Should not fail: %s", err)
+	}
+
+	if pass != password {
+		t.Errorf("Expected password %s, got %s", password, pass)
+	}
+}
+
+// TestCustomKeyringDelete tests deleting a secret from a custom keyring.
+func TestCustomKeyringDelete(t *testing.T) {
+	keyRing := NewCustomKeyring("_keyring_test")
+	err := keyRing.Delete(service, user)
+	if err != nil {
+		t.Errorf("Should not fail, got: %s", err)
 	}
 }

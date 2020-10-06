@@ -2,8 +2,10 @@ package ss
 
 import (
 	"fmt"
+	"regexp"
 
 	"errors"
+
 	"github.com/godbus/dbus"
 )
 
@@ -19,6 +21,11 @@ const (
 
 	loginCollectionAlias = "/org/freedesktop/secrets/aliases/default"
 	collectionBasePath   = "/org/freedesktop/secrets/collection/"
+)
+
+const (
+	// DefaultKeyringName the name of the keyring to use as default
+	DefaultKeyringName = "login"
 )
 
 // Secret defines a org.freedesk.Secret.Item secret struct.
@@ -42,20 +49,29 @@ func NewSecret(session dbus.ObjectPath, secret string) Secret {
 // SecretService is an interface for the Secret Service dbus API.
 type SecretService struct {
 	*dbus.Conn
-	object dbus.BusObject
+	object      dbus.BusObject
+	KeyringName string
 }
 
 // NewSecretService inializes a new SecretService object.
-func NewSecretService() (*SecretService, error) {
+func NewSecretService(keyringName string) (*SecretService, error) {
 	conn, err := dbus.SessionBus()
 	if err != nil {
 		return nil, err
 	}
 
 	return &SecretService{
-		conn,
-		conn.Object(serviceName, servicePath),
+		Conn:        conn,
+		object:      conn.Object(serviceName, servicePath),
+		KeyringName: formatKeyringName(keyringName),
 	}, nil
+}
+
+// see https://lists.freedesktop.org/archives/systemd-devel/2013-March/009402.html
+func formatKeyringName(name string) string {
+	re := regexp.MustCompile("[^A-Za-z0-9]")
+	name = re.ReplaceAllString(name, "_5f")
+	return name
 }
 
 // OpenSession opens a secret service session.
@@ -87,9 +103,39 @@ func (s *SecretService) CheckCollectionPath(path dbus.ObjectPath) error {
 	return errors.New("path not found")
 }
 
+// GetCollectionForKeyring returns collection from SecretService
+func (s *SecretService) GetCollectionForKeyring() (dbus.BusObject, error) {
+	var collection dbus.BusObject
+	// Pick requested collection
+	if len(s.KeyringName) == 0 || s.KeyringName == DefaultKeyringName {
+		collection = s.GetLoginCollection()
+	} else {
+		// Check for customs collections availability
+		collectionPath := s.GetCollectionPath(s.KeyringName)
+		err := s.CheckCollectionPath(collectionPath)
+		if err != nil {
+			return nil, err
+		}
+
+		// If available
+		collection = s.GetCollectionByPath(collectionPath)
+	}
+	return collection, nil
+}
+
+// GetCollectionPath get path of collection by its name
+func (s *SecretService) GetCollectionPath(name string) dbus.ObjectPath {
+	return dbus.ObjectPath(collectionBasePath + name)
+}
+
 // GetCollection returns a collection from a name.
 func (s *SecretService) GetCollection(name string) dbus.BusObject {
-	return s.Object(serviceName, dbus.ObjectPath(collectionBasePath+name))
+	return s.GetCollectionByPath(s.GetCollectionPath(name))
+}
+
+// GetCollectionByPath returns a collection from a name.
+func (s *SecretService) GetCollectionByPath(path dbus.ObjectPath) dbus.BusObject {
+	return s.Object(serviceName, path)
 }
 
 // GetLoginCollection decides and returns the dbus collection to be used for login.

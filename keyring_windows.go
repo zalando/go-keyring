@@ -1,9 +1,24 @@
 package keyring
 
 import (
-	"github.com/danieljoos/wincred"
 	"syscall"
+
+	"github.com/danieljoos/wincred"
 )
+
+// ignore, just for typecast in keyring.go
+type secretServiceProvider struct {
+	keyringName string
+}
+
+// Set password in keyring for user.
+func (s secretServiceProvider) Set(service, user, password string) error { return nil }
+
+// Get password from keyring given service and user name.
+func (s secretServiceProvider) Get(service, user string) (string, error) { return "", nil }
+
+// Delete secret from keyring.
+func (s secretServiceProvider) Delete(service, user string) error { return nil }
 
 type windowsKeychain struct{}
 
