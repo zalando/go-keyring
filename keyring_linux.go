@@ -2,8 +2,10 @@ package keyring
 
 import (
 	"fmt"
+
 	dbus "github.com/godbus/dbus/v5"
-	"github.com/zalando/go-keyring/secret_service"
+	kw "github.com/zalando/go-keyring/kwallet"
+	ss "github.com/zalando/go-keyring/secret_service"
 )
 
 type secretServiceProvider struct{}
@@ -11,6 +13,13 @@ type secretServiceProvider struct{}
 // Set stores user and pass in the keyring under the defined service
 // name.
 func (s secretServiceProvider) Set(service, user, pass string) error {
+	if w, err := kw.NewKWallet(service); err == nil && w.IsAvailable() {
+		if err := w.Open(); err != nil {
+			return err
+		}
+		return w.Write(user, pass)
+	}
+
 	svc, err := ss.NewSecretService()
 	if err != nil {
 		return err
@@ -75,6 +84,22 @@ func (s secretServiceProvider) findItem(svc *ss.SecretService, service, user str
 
 // Get gets a secret from the keyring given a service name and a user.
 func (s secretServiceProvider) Get(service, user string) (string, error) {
+	if w, err := kw.NewKWallet(service); err == nil && w.IsAvailable() {
+		if err := w.Open(); err != nil {
+			return "", err
+		}
+		if b, err := w.Has(user); err != nil {
+			return "", err
+		} else if !b {
+			return "", ErrNotFound
+		}
+		pw, err := w.Read(user)
+		if err != nil {
+			return "", err
+		}
+		return pw, nil
+	}
+
 	svc, err := ss.NewSecretService()
 	if err != nil {
 		return "", err
@@ -102,6 +127,18 @@ func (s secretServiceProvider) Get(service, user string) (string, error) {
 
 // Delete deletes a secret, identified by service & user, from the keyring.
 func (s secretServiceProvider) Delete(service, user string) error {
+	if w, err := kw.NewKWallet(service); err == nil && w.IsAvailable() {
+		if err := w.Open(); err != nil {
+			return err
+		}
+		if b, err := w.Has(user); err != nil {
+			return err
+		} else if !b {
+			return ErrNotFound
+		}
+		return w.Delete(user)
+	}
+
 	svc, err := ss.NewSecretService()
 	if err != nil {
 		return err
