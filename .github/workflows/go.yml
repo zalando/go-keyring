@@ -26,7 +26,7 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v2
       with:
-        go-version: ^1.14
+        go-version: ^1.15
       id: go
 
     - name: Get dependencies
@@ -35,6 +35,7 @@ jobs:
 
     - name: Install Dependencies (Linux)
       run: |
+        sudo apt-get update
         sudo apt-get install python-gnomekeyring
         sudo apt-get install gnome-keyring
         dbus-launch /usr/bin/python -c "import gnomekeyring;gnomekeyring.create_sync('login', '');"

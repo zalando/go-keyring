@@ -2,7 +2,7 @@ package keyring
 
 import (
 	"fmt"
-	"github.com/godbus/dbus"
+	dbus "github.com/godbus/dbus/v5"
 	"github.com/zalando/go-keyring/secret_service"
 )
 
