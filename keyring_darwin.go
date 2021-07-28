@@ -61,11 +61,10 @@ func (k macOSXKeychain) Get(service, username string) (string, error) {
 
 // Set stores a secret in the keyring given a service name and a user.
 func (k macOSXKeychain) Set(service, username, password string) error {
-	// if the added secret has multiple lines, osx will hex encode it
-	// identify this with a well-known prefix.
-	if strings.ContainsRune(password, '\n') {
-		password = encodingPrefix + hex.EncodeToString([]byte(password))
-	}
+	// if the added secret has multiple lines or some non ascii,
+	// osx will hex encode it on return. To avoid getting garbage, we
+	// encode all passwords
+	password = encodingPrefix + hex.EncodeToString([]byte(password))
 
 	return exec.Command(
 		execPathKeychain,
