@@ -38,6 +38,24 @@ like osx`
 	}
 }
 
+// TestGetMultiline tests getting a multi-line password from the keyring
+func TestGetUmlaut(t *testing.T) {
+	umlautPassword := "at least on OSX üöäÜÖÄß will be encoded"
+	err := Set(service, user, umlautPassword)
+	if err != nil {
+		t.Errorf("Should not fail, got: %s", err)
+	}
+
+	pw, err := Get(service, user)
+	if err != nil {
+		t.Errorf("Should not fail, got: %s", err)
+	}
+
+	if umlautPassword != pw {
+		t.Errorf("Expected password %s, got %s", umlautPassword, pw)
+	}
+}
+
 // TestGetSingleLineHex tests getting a single line hex string password from the keyring.
 func TestGetSingleLineHex(t *testing.T) {
 	hexPassword := "abcdef123abcdef123"
