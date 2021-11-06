@@ -1,15 +1,15 @@
 package keyring
 
-import "fmt"
+import "github.com/zalando/go-keyring/errors"
 
 // provider set in the init function by the relevant os file e.g.:
 // keyring_linux.go
 var provider Keyring = fallbackServiceProvider{}
 
-var (
+const (
 	// ErrNotFound is the expected error if the secret isn't found in the
 	// keyring.
-	ErrNotFound = fmt.Errorf("secret not found in keyring")
+	ErrNotFound = errors.ErrNotFound
 )
 
 // Keyring provides a simple set/get interface for a keyring service.
