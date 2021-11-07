@@ -1,10 +1,11 @@
 package ss
 
 import (
+	"errors"
 	"fmt"
 
-	"errors"
 	dbus "github.com/godbus/dbus/v5"
+	errs "github.com/zalando/go-keyring/errors"
 )
 
 const (
@@ -52,10 +53,25 @@ func NewSecretService() (*SecretService, error) {
 		return nil, err
 	}
 
-	return &SecretService{
+	s := &SecretService{
 		conn,
 		conn.Object(serviceName, servicePath),
-	}, nil
+	}
+
+	session, err := s.OpenSession()
+	if err != nil {
+		return nil, fmt.Errorf("failed to open secret service session: %w", err)
+	}
+	defer s.Close(session)
+
+	// check that the secret service backend is available
+	collection := s.GetLoginCollection()
+	err = s.Unlock(collection.Path())
+	if err != nil {
+		return nil, fmt.Errorf("failed to open secret service session: %w", err)
+	}
+
+	return s, nil
 }
 
 // OpenSession opens a secret service session.
@@ -68,6 +84,82 @@ func (s *SecretService) OpenSession() (dbus.BusObject, error) {
 	}
 
 	return s.Object(serviceName, sessionPath), nil
+}
+
+func (s *SecretService) Set(service, user, password string) error {
+	// open a session
+	session, err := s.OpenSession()
+	if err != nil {
+		return err
+	}
+	defer s.Close(session)
+
+	attributes := map[string]string{
+		"username": user,
+		"service":  service,
+	}
+
+	secret := NewSecret(session.Path(), password)
+
+	collection := s.GetLoginCollection()
+
+	err = s.Unlock(collection.Path())
+	if err != nil {
+		return err
+	}
+
+	return s.CreateItem(
+		collection,
+		fmt.Sprintf("Password for '%s' on '%s'", user, service),
+		attributes,
+		secret,
+	)
+}
+
+func (s *SecretService) Get(service, user string) (string, error) {
+	item, err := s.find(service, user)
+	if err != nil {
+		return "", err
+	}
+
+	session, err := s.OpenSession()
+	if err != nil {
+		return "", err
+	}
+	defer s.Close(session)
+
+	secret, err := s.GetSecret(item, session.Path())
+	if err != nil {
+		return "", err
+	}
+
+	return string(secret.Value), nil
+}
+
+func (s *SecretService) find(service, user string) (dbus.ObjectPath, error) {
+	collection := s.GetLoginCollection()
+
+	err := s.Unlock(collection.Path())
+	if err != nil {
+		return "", err
+	}
+
+	results, err := s.SearchItems(
+		collection,
+		map[string]string{
+			"username": user,
+			"service":  service,
+		},
+	)
+	if err != nil {
+		return "", err
+	}
+
+	if len(results) == 0 {
+		return "", errs.ErrNotFound
+	}
+
+	return results[0], nil
 }
 
 // CheckCollectionPath accepts dbus path and returns nil if the path is found
@@ -229,9 +321,13 @@ func (s *SecretService) GetSecret(itemPath dbus.ObjectPath, session dbus.ObjectP
 }
 
 // Delete deletes an item from the collection.
-func (s *SecretService) Delete(itemPath dbus.ObjectPath) error {
+func (s *SecretService) Delete(service, user string) error {
+	itemPath, err := s.find(service, user)
+	if err != nil {
+		return err
+	}
 	var prompt dbus.ObjectPath
-	err := s.Object(serviceName, itemPath).Call(itemInterface+".Delete", 0).Store(&prompt)
+	err = s.Object(serviceName, itemPath).Call(itemInterface+".Delete", 0).Store(&prompt)
 	if err != nil {
 		return err
 	}

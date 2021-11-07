@@ -1,12 +1,13 @@
 package keyring
 
 import (
-	"errors"
-	"runtime"
+	errs "github.com/zalando/go-keyring/errors"
 )
 
 // All of the following methods error out on unsupported platforms
-var ErrUnsupportedPlatform = errors.New("Unsupported platform: " + runtime.GOOS)
+const (
+	ErrUnsupportedPlatform = errs.ErrUnsupportedPlatform
+)
 
 type fallbackServiceProvider struct{}
 
