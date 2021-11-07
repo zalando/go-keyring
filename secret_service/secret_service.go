@@ -58,12 +58,18 @@ func NewSecretService() (*SecretService, error) {
 		conn.Object(serviceName, servicePath),
 	}
 
-	// check that the secret service backend is available
 	session, err := s.OpenSession()
 	if err != nil {
 		return nil, fmt.Errorf("failed to open secret service session: %w", err)
 	}
-	s.Close(session)
+	defer s.Close(session)
+
+	// check that the secret service backend is available
+	collection := s.GetLoginCollection()
+	err = s.Unlock(collection.Path())
+	if err != nil {
+		return nil, fmt.Errorf("failed to open secret service session: %w", err)
+	}
 
 	return s, nil
 }

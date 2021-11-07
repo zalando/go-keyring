@@ -17,8 +17,9 @@ const (
 // KWallet is an interface for the KWallet dbus API.
 type KWallet struct {
 	*dbus.Conn
-	object dbus.BusObject
-	handle int
+	object     dbus.BusObject
+	walletName string
+	handle     int
 }
 
 // NewKWallet inializes a new NewKwallet object.
@@ -33,37 +34,21 @@ func NewKWallet() (*KWallet, error) {
 		object: conn.Object(serviceName, servicePath),
 	}
 
-	var wallet string
-	if err := kw.object.Call(methodInterface+".networkWallet", 0).Store(&wallet); err != nil {
-		return nil, fmt.Errorf("Kwallet is not available: %w", err)
-	}
-
-	return kw, nil
-}
-
-// Open the wallet
-func (k *KWallet) Open(service string) error {
-	var wallet string
-	if err := k.object.Call(methodInterface+".networkWallet", 0).Store(&wallet); err != nil {
-		return err
-	}
-
-	if err := k.object.Call(methodInterface+".open", 0, wallet, int64(0), service).Store(&k.handle); err != nil {
-		return err
-	}
-	return nil
+	kw.walletName, err = kw.defaultWallet()
+	return kw, err
 }
 
 // Set stores user and pass in the keyring under the defined service
 // name.
 func (k *KWallet) Set(service, user, pass string) error {
-	if err := k.Open(service); err != nil {
+	if err := k.open(service); err != nil {
 		return err
 	}
 
 	var i int
+	// org.kde.KWallet.writePassword(handle int, folder string, key string, value string, appId string) int
 	if err := k.object.Call(methodInterface+".writePassword", 0, k.handle, service, user, pass, service).Store(&i); err != nil {
-		return err
+		return fmt.Errorf("failed to write password: %w", err)
 	}
 	if i < 0 {
 		return errors.New("Could not write password")
@@ -73,46 +58,83 @@ func (k *KWallet) Set(service, user, pass string) error {
 
 // Get gets a secret from the keyring given a service name and a user.
 func (k *KWallet) Get(service, user string) (string, error) {
-	if err := k.Open(service); err != nil {
+	if err := k.open(service); err != nil {
 		return "", err
 	}
-	if b, err := k.Has(service, user); err != nil {
+	if b, err := k.hasEntry(service, user); err != nil {
 		return "", err
 	} else if !b {
 		return "", errs.ErrNotFound
 	}
+
 	var password string
-	err := k.object.Call(methodInterface+".readPassword", 0, k.handle, service, user, service).Store(&password)
-	return password, err
+	// org.kde.KWallet.readPassword(handle int, folder string, key string, appId string) string
+	if err := k.object.Call(methodInterface+".readPassword", 0, k.handle, service, user, service).Store(&password); err != nil {
+		return "", fmt.Errorf("failed to read password: %w", err)
+	}
+	return password, nil
 }
 
 // Delete deletes a secret, identified by service & user, from the keyring.
 func (k *KWallet) Delete(service, user string) error {
-	if err := k.Open(service); err != nil {
+	if err := k.open(service); err != nil {
 		return err
 	}
-	if b, err := k.Has(service, user); err != nil {
+
+	if b, err := k.hasEntry(service, user); err != nil {
 		return err
 	} else if !b {
 		return errs.ErrNotFound
 	}
 
-	var i int
-	if err := k.object.Call(methodInterface+".removeEntry", 0, k.handle, service, user, service).Store(&i); err != nil {
-		return err
+	return k.removeEntry(service, user)
+}
+
+func (k *KWallet) open(service string) error {
+	var alreadyOpen bool
+	// org.kde.KWallet.isOpen(wallet string) bool
+	if err := k.object.Call(methodInterface+".isOpen", 0, k.handle).Store(&alreadyOpen); err != nil {
+		return fmt.Errorf("failed to check if wallet is open: %w", err)
+	}
+	if alreadyOpen {
+		return nil
 	}
 
-	if i < 0 {
-		return errors.New("Could not delete password")
+	// org.kde.KWallet.open(wallet string, wId string, appId string) int
+	if err := k.object.Call(methodInterface+".open", 0, k.walletName, int64(0), service).Store(&k.handle); err != nil {
+		return fmt.Errorf("failed to open wallet: %w", err)
 	}
 	return nil
 }
 
-// Has a key
-func (k *KWallet) Has(service, key string) (bool, error) {
+func (k *KWallet) defaultWallet() (string, error) {
+	var wallet string
+	// org.kde.KWallet.networkWallet() string
+	if err := k.object.Call(methodInterface+".networkWallet", 0).Store(&wallet); err != nil {
+		return "", fmt.Errorf("KWallet is not available: %w", err)
+	}
+
+	return wallet, nil
+}
+
+func (k *KWallet) removeEntry(service, key string) error {
+	var i int
+	// org.kde.KWallet.removeEntry(handle int, folder string, key string, appId string) int
+	if err := k.object.Call(methodInterface+".removeEntry", 0, k.handle, service, key, service).Store(&i); err != nil {
+		return fmt.Errorf("failed to delete entry: %w", err)
+	}
+	if i < 0 {
+		return errors.New("Could not delete password")
+	}
+
+	return nil
+}
+
+func (k *KWallet) hasEntry(service, key string) (bool, error) {
 	var b bool
+	// org.kde.KWallet.hasEntry(handle int, folder string, key string, appId string) bool
 	if err := k.object.Call(methodInterface+".hasEntry", 0, k.handle, service, key, service).Store(&b); err != nil {
-		return b, err
+		return b, fmt.Errorf("failed to check if entry exists: %w", err)
 	}
 	return b, nil
 }
