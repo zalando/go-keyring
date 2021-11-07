@@ -53,10 +53,19 @@ func NewSecretService() (*SecretService, error) {
 		return nil, err
 	}
 
-	return &SecretService{
+	s := &SecretService{
 		conn,
 		conn.Object(serviceName, servicePath),
-	}, nil
+	}
+
+	// check that the secret service backend is available
+	session, err := s.OpenSession()
+	if err != nil {
+		return nil, fmt.Errorf("failed to open secret service session: %w", err)
+	}
+	s.Close(session)
+
+	return s, nil
 }
 
 // OpenSession opens a secret service session.
