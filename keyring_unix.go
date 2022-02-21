@@ -1,9 +1,13 @@
+//go:build dragonfly || freebsd || linux || netbsd || openbsd
+// +build dragonfly freebsd linux netbsd openbsd
+
 package keyring
 
 import (
 	"fmt"
+
 	dbus "github.com/godbus/dbus/v5"
-	"github.com/zalando/go-keyring/secret_service"
+	ss "github.com/zalando/go-keyring/secret_service"
 )
 
 type secretServiceProvider struct{}
