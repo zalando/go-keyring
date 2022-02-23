@@ -76,3 +76,19 @@ jobs:
     - name: Test
       run: |
         go test -v ./...
+
+  build-freebsd:
+    name: Build (FreeBSD)
+    runs-on: macOS-10.15
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Test in FreeBSD
+      id: test
+      uses: vmactions/freebsd-vm@v0.1.6
+      with:
+        prepare: pkg install -y go gnome-keyring
+        run: |
+          go version
+          go build -v ./...
+          dbus-run-session -- sh -c "echo 'somecredstorepass' | gnome-keyring-daemon --unlock; go test -v ./..."
