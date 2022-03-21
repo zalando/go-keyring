@@ -87,8 +87,14 @@ jobs:
       id: test
       uses: vmactions/freebsd-vm@v0.1.6
       with:
+        usesh: true
         prepare: pkg install -y go gnome-keyring
         run: |
           go version
-          go build -v ./...
+          go build -v
           dbus-run-session -- sh -c "echo 'somecredstorepass' | gnome-keyring-daemon --unlock; go test -v ./..."
+          # verify that we can build for freebsd with cgo disabled
+          # This will disable the functionality as it depends on cgo (via
+          # godbus) but should still be buildable to not break backwards
+          # compatibility
+          CGO_ENABLED=0 go build -v
