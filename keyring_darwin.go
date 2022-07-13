@@ -46,7 +46,7 @@ func (k macOSXKeychain) Get(service, username string) (string, error) {
 		"-s", service,
 		"-wa", username).CombinedOutput()
 	if err != nil {
-		if strings.Contains(fmt.Sprintf("%s", out), "could not be found") {
+		if strings.Contains(string(out), "could not be found") {
 			err = ErrNotFound
 		}
 		return "", err
@@ -99,7 +99,7 @@ func (k macOSXKeychain) Delete(service, username string) error {
 		"delete-generic-password",
 		"-s", service,
 		"-a", username).CombinedOutput()
-	if strings.Contains(fmt.Sprintf("%s", out), "could not be found") {
+	if strings.Contains(string(out), "could not be found") {
 		err = ErrNotFound
 	}
 	return err
