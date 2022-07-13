@@ -1,8 +1,9 @@
 package keyring
 
 import (
-	"github.com/danieljoos/wincred"
 	"syscall"
+
+	"github.com/danieljoos/wincred"
 )
 
 type windowsKeychain struct{}
