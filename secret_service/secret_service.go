@@ -2,6 +2,7 @@ package ss
 
 import (
 	"fmt"
+	"strings"
 
 	"errors"
 
@@ -63,9 +64,16 @@ func NewSecretService() (*SecretService, error) {
 func (s *SecretService) OpenSession() (dbus.BusObject, error) {
 	var disregard dbus.Variant
 	var sessionPath dbus.ObjectPath
-	err := s.object.Call(serviceInterface+".OpenSession", 0, "dh-ietf1024-sha256-aes128-cbc-pkcs7", dbus.MakeVariant("")).Store(&disregard, &sessionPath)
+	err := s.object.Call(serviceInterface+".OpenSession", 0, "plain", dbus.MakeVariant("")).Store(&disregard, &sessionPath)
 	if err != nil {
-		return nil, err
+		if strings.Contains(err.Error(), "Algorithm plain is not supported") {
+			err := s.object.Call(serviceInterface+".OpenSession", 0, "dh-ietf1024-sha256-aes128-cbc-pkcs7", dbus.MakeVariant("")).Store(&disregard, &sessionPath)
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			return nil, err
+		}
 	}
 
 	return s.Object(serviceName, sessionPath), nil
