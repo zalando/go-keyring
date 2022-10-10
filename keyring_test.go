@@ -1,6 +1,10 @@
 package keyring
 
-import "testing"
+import (
+	"runtime"
+	"strings"
+	"testing"
+)
 
 const (
 	service  = "test-service"
@@ -13,6 +17,18 @@ func TestSet(t *testing.T) {
 	err := Set(service, user, password)
 	if err != nil {
 		t.Errorf("Should not fail, got: %s", err)
+	}
+}
+
+func TestSetTooLong(t *testing.T) {
+	extraLongPassword := "ba" + strings.Repeat("na", 5000)
+	err := Set(service, user, extraLongPassword)
+
+	if runtime.GOOS == "windows" || runtime.GOOS == "darwin" {
+		// should fail on those platforms
+		if err != ErrSetDataTooBig {
+			t.Errorf("Should have failed, got: %s", err)
+		}
 	}
 }
 

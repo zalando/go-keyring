@@ -24,6 +24,16 @@ func (k windowsKeychain) Get(service, username string) (string, error) {
 // Set stores stores user and pass in the keyring under the defined service
 // name.
 func (k windowsKeychain) Set(service, username, password string) error {
+	// password may not exceed 2560 bytes (https://github.com/jaraco/keyring/issues/540#issuecomment-968329967)
+	if len(password) > 2560 {
+		return ErrSetDataTooBig
+	}
+
+	// service may not exceed 32k
+	if len(service) > 1024*32 {
+		return ErrSetDataTooBig
+	}
+
 	cred := wincred.NewGenericCredential(k.credName(service, username))
 	cred.UserName = username
 	cred.CredentialBlob = []byte(password)
