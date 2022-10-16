@@ -29,8 +29,14 @@ func (k windowsKeychain) Set(service, username, password string) error {
 		return ErrSetDataTooBig
 	}
 
-	// service may not exceed 32k
-	if len(service) > 1024*32 {
+	// service may not exceed 512 bytes (might need more testing)
+	if len(service) >= 512 {
+		return ErrSetDataTooBig
+	}
+
+	// service may not exceed 32k but problems occur before that
+	// so we limit it to 30k
+	if len(service) > 1024*30 {
 		return ErrSetDataTooBig
 	}
 
