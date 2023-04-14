@@ -199,10 +199,7 @@ func (s *SecretService) handlePrompt(prompt dbus.ObjectPath) (bool, dbus.Variant
 		}
 
 		defer func(s *SecretService, options ...dbus.MatchOption) {
-			err := s.RemoveMatchSignal(options...)
-			if err != nil {
-
-			}
+			_ = s.RemoveMatchSignal(options...)
 		}(s, dbus.WithMatchObjectPath(prompt), dbus.WithMatchInterface(promptInterface))
 
 		promptSignal := make(chan *dbus.Signal, 1)
