@@ -1,6 +1,9 @@
 package keyring
 
-import "testing"
+import (
+	"errors"
+	"testing"
+)
 
 // TestSet tests setting a user and password in the keyring.
 func TestMockSet(t *testing.T) {
@@ -34,9 +37,7 @@ func TestMockGetNonExisting(t *testing.T) {
 	mp := mockProvider{}
 
 	_, err := mp.Get(service, user+"fake")
-	if err != ErrNotFound {
-		t.Errorf("Expected error ErrNotFound, got %s", err)
-	}
+	assertError(t, err, ErrNotFound)
 }
 
 // TestDelete tests deleting a secret from the keyring.
@@ -59,7 +60,24 @@ func TestMockDeleteNonExisting(t *testing.T) {
 	mp := mockProvider{}
 
 	err := mp.Delete(service, user+"fake")
-	if err != ErrNotFound {
-		t.Errorf("Expected error ErrNotFound, got %s", err)
+	assertError(t, err, ErrNotFound)
+}
+
+func TestMockWithError(t *testing.T) {
+	mp := mockProvider{mockError: errors.New("mock error")}
+
+	err := mp.Set(service, user, password)
+	assertError(t, err, mp.mockError)
+
+	_, err = mp.Get(service, user)
+	assertError(t, err, mp.mockError)
+
+	err = mp.Delete(service, user)
+	assertError(t, err, mp.mockError)
+}
+
+func assertError(t *testing.T, err error, expected error) {
+	if err != expected {
+		t.Errorf("Expected error %s, got %s", expected, err)
 	}
 }
