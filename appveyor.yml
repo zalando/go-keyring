@@ -3,6 +3,8 @@ clone_folder: c:\gopath\src\github.com\zalando\go-keyring
 environment:
   GOPATH: c:\gopath
 install:
+  - set PATH=C:\go\bin;%PATH%
+  - set GOROOT=C:\go
   - go version
   - go get -t -v ./...
 build_script:
