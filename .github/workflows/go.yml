@@ -79,13 +79,13 @@ jobs:
 
   build-freebsd:
     name: Build (FreeBSD)
-    runs-on: macOS-10.15
+    runs-on: macos-12
 
     steps:
     - uses: actions/checkout@v2
     - name: Test in FreeBSD
       id: test
-      uses: vmactions/freebsd-vm@v0.1.6
+      uses: vmactions/freebsd-vm@v0.3.0
       with:
         usesh: true
         prepare: pkg install -y go gnome-keyring
