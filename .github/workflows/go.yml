@@ -18,12 +18,12 @@ jobs:
 
     steps:
     - name: Check out code into $GITHUB_WORKSPACE directory
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Set up Go
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v5
       with:
-        go-version: ^1.19
+        go-version: ^1.22
       id: go
 
     - name: Install Dependencies
@@ -57,12 +57,12 @@ jobs:
 
     steps:
     - name: Check out code into $GITHUB_WORKSPACE directory
-      uses: actions/checkout@v2
+      uses: actions/checkout@v4
 
     - name: Set up Go
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v5
       with:
-        go-version: ^1.19
+        go-version: ^1.22
       id: go
 
     - name: Get dependencies
@@ -79,13 +79,14 @@ jobs:
 
   build-freebsd:
     name: Build (FreeBSD)
-    runs-on: macos-12
+    # runs-on: macos-12
+    runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Test in FreeBSD
       id: test
-      uses: vmactions/freebsd-vm@v0.3.0
+      uses: vmactions/freebsd-vm@v1
       with:
         usesh: true
         prepare: pkg install -y go gnome-keyring
