@@ -22,6 +22,7 @@ func TestMockGet(t *testing.T) {
 		t.Errorf("Should not fail, got: %s", err)
 	}
 
+	_ = mp.Unlock(service, user)
 	pw, err := mp.Get(service, user)
 	if err != nil {
 		t.Errorf("Should not fail, got: %s", err)
@@ -29,6 +30,22 @@ func TestMockGet(t *testing.T) {
 
 	if password != pw {
 		t.Errorf("Expected password %s, got %s", password, pw)
+	}
+}
+
+// TestGetLocked tests getting a locked password from the keyring.
+func TestMockGetLocked(t *testing.T) {
+	mp := mockProvider{}
+	err := mp.Set(service, user, password)
+	if err != nil {
+		t.Errorf("Should not fail, got: %s", err)
+	}
+
+	pwd, err := mp.Get(service, user)
+	assertError(t, err, ErrNotFound)
+
+	if pwd != "" {
+		t.Errorf("Should not return item value, got: %s", pwd)
 	}
 }
 
@@ -49,6 +66,7 @@ func TestMockDelete(t *testing.T) {
 		t.Errorf("Should not fail, got: %s", err)
 	}
 
+	_ = mp.Unlock(service, user)
 	err = mp.Delete(service, user)
 	if err != nil {
 		t.Errorf("Should not fail, got: %s", err)
