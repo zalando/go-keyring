@@ -97,7 +97,13 @@ func (s *SecretService) GetCollection(name string) dbus.BusObject {
 func (s *SecretService) GetLoginCollection() dbus.BusObject {
 	path := dbus.ObjectPath(collectionBasePath + "login")
 	if err := s.CheckCollectionPath(path); err != nil {
-		path = dbus.ObjectPath(loginCollectionAlias)
+		var loginAlias dbus.ObjectPath
+		err := s.object.Call(serviceInterface+".ReadAlias", 0, "login").Store(&loginAlias)
+		if err != nil || loginAlias == "/" {
+			path = dbus.ObjectPath(loginCollectionAlias)
+		} else {
+			path = loginAlias
+		}
 	}
 	return s.Object(serviceName, path)
 }
