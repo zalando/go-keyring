@@ -124,6 +124,27 @@ func (s secretServiceProvider) Delete(service, user string) error {
 	return svc.Delete(item)
 }
 
+// DeleteAll deletes all secrets for a given service
+func (s secretServiceProvider) DeleteAll(service string) error {
+	svc, err := ss.NewSecretService()
+	if err != nil {
+		return err
+	}
+	for {
+		item, err := s.findItem(svc, service, "")
+		if err != nil {
+			if err == ErrNotFound {
+				return nil
+			}
+			return err
+		}
+		err = svc.Delete(item)
+		if err != nil {
+			return err
+		}
+	}
+}
+
 func init() {
 	provider = secretServiceProvider{}
 }

@@ -113,6 +113,24 @@ func (k macOSXKeychain) Delete(service, username string) error {
 	return err
 }
 
+// DeleteAll deletes all secrets for a given service
+func (k macOSXKeychain) DeleteAll(service string) error {
+	// Delete each secret in a while loop until there is no more left
+	// under the service
+	for {
+		out, err := exec.Command(
+			execPathKeychain,
+			"delete-generic-password",
+			"-s", service).CombinedOutput()
+		if strings.Contains(string(out), "could not be found") {
+			return nil
+		} else if err != nil {
+			return err
+		}
+	}
+
+}
+
 func init() {
 	provider = macOSXKeychain{}
 }
