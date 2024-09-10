@@ -167,3 +167,17 @@ func TestDeleteAll(t *testing.T) {
 		t.Errorf("Should not fail on empty service, got: %s", err)
 	}
 }
+
+// TestDeleteAll with empty service name
+func TestDeleteAllEmptyService(t *testing.T) {
+	err := Set(service, user, password)
+
+	if err != nil {
+		t.Errorf("Should not fail, got: %s", err)
+	}
+	_ = DeleteAll("")
+	_, err = Get(service, user)
+	if err == ErrNotFound {
+		t.Errorf("Should not have deleted secret from another service")
+	}
+}

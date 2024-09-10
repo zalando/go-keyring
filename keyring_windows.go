@@ -61,6 +61,11 @@ func (k windowsKeychain) Delete(service, username string) error {
 }
 
 func (k windowsKeychain) DeleteAll(service string) error {
+	// if service is empty, do nothing otherwise it might accidentally delete all secrets
+	if service == "" {
+		return ErrNotFound
+	}
+
 	creds, err := wincred.List()
 	if err != nil {
 		return err

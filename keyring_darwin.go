@@ -115,6 +115,10 @@ func (k macOSXKeychain) Delete(service, username string) error {
 
 // DeleteAll deletes all secrets for a given service
 func (k macOSXKeychain) DeleteAll(service string) error {
+	// if service is empty, do nothing otherwise it might accidentally delete all secrets
+	if service == "" {
+		return ErrNotFound
+	}
 	// Delete each secret in a while loop until there is no more left
 	// under the service
 	for {

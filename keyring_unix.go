@@ -151,6 +151,11 @@ func (s secretServiceProvider) Delete(service, user string) error {
 
 // DeleteAll deletes all secrets for a given service
 func (s secretServiceProvider) DeleteAll(service string) error {
+	// if service is empty, do nothing otherwise it might accidentally delete all secrets
+	if service == "" {
+		return ErrNotFound
+	}
+
 	svc, err := ss.NewSecretService()
 	if err != nil {
 		return err
