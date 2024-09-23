@@ -130,3 +130,54 @@ func TestDeleteNonExisting(t *testing.T) {
 		t.Errorf("Expected error ErrNotFound, got %s", err)
 	}
 }
+
+// TestDeleteAll tests deleting all secrets for a given service.
+func TestDeleteAll(t *testing.T) {
+	// Set up multiple secrets for the same service
+	err := Set(service, user, password)
+	if err != nil {
+		t.Errorf("Should not fail, got: %s", err)
+	}
+
+	err = Set(service, user+"2", password+"2")
+	if err != nil {
+		t.Errorf("Should not fail, got: %s", err)
+	}
+
+	// Delete all secrets for the service
+	err = DeleteAll(service)
+	if err != nil {
+		t.Errorf("Should not fail, got: %s", err)
+	}
+
+	// Verify that all secrets for the service are deleted
+	_, err = Get(service, user)
+	if err != ErrNotFound {
+		t.Errorf("Expected error ErrNotFound, got %s", err)
+	}
+
+	_, err = Get(service, user+"2")
+	if err != ErrNotFound {
+		t.Errorf("Expected error ErrNotFound, got %s", err)
+	}
+
+	// Verify that DeleteAll on an empty service doesn't cause an error
+	err = DeleteAll(service)
+	if err != nil {
+		t.Errorf("Should not fail on empty service, got: %s", err)
+	}
+}
+
+// TestDeleteAll with empty service name
+func TestDeleteAllEmptyService(t *testing.T) {
+	err := Set(service, user, password)
+
+	if err != nil {
+		t.Errorf("Should not fail, got: %s", err)
+	}
+	_ = DeleteAll("")
+	_, err = Get(service, user)
+	if err == ErrNotFound {
+		t.Errorf("Should not have deleted secret from another service")
+	}
+}
