@@ -35,10 +35,6 @@ const (
 
 type macOSXKeychain struct{}
 
-// func (*MacOSXKeychain) IsAvailable() bool {
-// 	return exec.Command(execPathKeychain).Run() != exec.ErrNotFound
-// }
-
 // Get password from macos keyring given service and user name.
 func (k macOSXKeychain) Get(service, username string) (string, error) {
 	out, err := exec.Command(
