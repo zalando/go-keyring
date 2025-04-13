@@ -72,6 +72,57 @@ func main() {
 
 ```
 
+## Custom Provider
+
+It is possible to set a custom keyring provider if the default OS-specific providers do not meet your needs. This can be useful for testing or for integrating with alternative secret storage mechanisms.
+
+To use a custom provider, define a type that implements the `keyring.Keyring` interface and then set it using `keyring.SetProvider()`.
+
+```go
+package main
+
+import (
+	"fmt"
+
+	"github.com/zalando/go-keyring"
+)
+
+type customProvider struct{}
+
+func (p customProvider) Set(service, user, password string) error {
+	fmt.Println("Custom Set:", service, user, password)
+	return nil
+}
+
+func (p customProvider) Get(service, user string) (string, error) {
+	fmt.Println("Custom Get:", service, user)
+	// Return a dummy value or implement custom logic
+	return "dummy-secret", nil
+}
+
+func (p customProvider) Delete(service, user string) error {
+	fmt.Println("Custom Delete:", service, user)
+	return nil
+}
+
+func (p customProvider) DeleteAll(service string) error {
+	fmt.Println("Custom DeleteAll:", service)
+	return nil
+}
+
+func main() {
+	// Set the custom provider before any other keyring operations
+	keyring.SetProvider(customProvider{})
+
+	// Now use the keyring functions as usual
+	keyring.Set("my-service", "my-user", "my-password")
+	secret, _ := keyring.Get("my-service", "my-user")
+	fmt.Println("Retrieved secret:", secret)
+	keyring.Delete("my-service", "my-user")
+}
+
+```
+
 ## Tests
 ### Running tests
 Running the tests is simple:

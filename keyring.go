@@ -17,6 +17,11 @@ var (
 	ErrSetDataTooBig = errors.New("data passed to Set was too big")
 )
 
+// SetProvider sets the provider for the keyring
+func SetProvider(p Keyring) {
+	provider = p
+}
+
 // Keyring provides a simple set/get interface for a keyring service.
 type Keyring interface {
 	// Set password in keyring for user.
