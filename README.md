@@ -1,4 +1,5 @@
 # Go Keyring library
+
 [![Go Report Card](https://goreportcard.com/badge/github.com/zalando/go-keyring)](https://goreportcard.com/report/github.com/zalando/go-keyring)
 [![GoDoc](https://godoc.org/github.com/zalando/go-keyring?status.svg)](https://godoc.org/github.com/zalando/go-keyring)
 
@@ -32,10 +33,10 @@ It's expected that the default collection `login` exists in the keyring, because
 it's the default in most distros. If it doesn't exist, you can create it through the
 keyring frontend program [Seahorse](https://wiki.gnome.org/Apps/Seahorse):
 
- * Open `seahorse`
- * Go to **File > New > Password Keyring**
- * Click **Continue**
- * When asked for a name, use: **login**
+* Open `seahorse`
+* Go to **File > New > Password Keyring**
+* Click **Continue**
+* When asked for a name, use: **login**
 
 ## Example Usage
 
@@ -73,7 +74,9 @@ func main() {
 ```
 
 ## Tests
+
 ### Running tests
+
 Running the tests is simple:
 
 ```
@@ -85,6 +88,7 @@ test the implementation in `keyring_unix.go`. If running the tests
 on **OS X**, it will test the implementation in `keyring_darwin.go`.
 
 ### Mocking
+
 If you need to mock the keyring behavior for testing on systems without a keyring implementation you can call `MockInit()` which will replace the OS defined provider with an in-memory one.
 
 ```go
@@ -120,25 +124,24 @@ func TestMockedSetGet(t *testing.T) {
 
 We welcome contributions from the community; please use [CONTRIBUTING.md](CONTRIBUTING.md) as your guidelines for getting started. Here are some items that we'd love help with:
 
-- The code base
-- Better test coverage
+* The code base
+* Better test coverage
 
 Please use GitHub issues as the starting point for contributions, new ideas and/or bug reports.
 
 ## Contact
 
-* E-Mail: team-teapot@zalando.de
-* Security issues: Please send an email to the [maintainers](MAINTAINERS), and we'll try to get back to you within two workdays. If you don't hear back, send an email to team-teapot@zalando.de and someone will respond within five days max.
+* E-Mail: <team-teapot@zalando.de>
+* Security issues: Please send an email to the [maintainers](MAINTAINERS), and we'll try to get back to you within two workdays. If you don't hear back, send an email to <team-teapot@zalando.de> and someone will respond within five days max.
 
 ## Contributors
 
 Thanks to:
 
-- [your name here]
+* [your name here]
 
 ## License
 
 See [LICENSE](LICENSE) file.
 
-
-[SecretService]: https://specifications.freedesktop.org/secret-service/latest/
+[SecretService]: https://specifications.freedesktop.org/secret-service-spec/latest//
