@@ -144,4 +144,4 @@ Thanks to:
 
 See [LICENSE](LICENSE) file.
 
-[SecretService]: https://specifications.freedesktop.org/secret-service-spec/latest//
+[SecretService]: https://specifications.freedesktop.org/secret-service-spec/latest/
