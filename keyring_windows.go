@@ -47,6 +47,31 @@ func (k windowsKeychain) Set(service, username, password string) error {
 	return cred.Write()
 }
 
+// SetBytes stores a secret from a byte slice, preventing string conversion
+// and allowing the caller to zeroize the sensitive data after use.
+func (k windowsKeychain) SetBytes(service, username string, password []byte) error {
+	// password may not exceed 2560 bytes (https://github.com/jaraco/keyring/issues/540#issuecomment-968329967)
+	if len(password) > 2560 {
+		return ErrSetDataTooBig
+	}
+
+	// service may not exceed 512 bytes (might need more testing)
+	if len(service) >= 512 {
+		return ErrSetDataTooBig
+	}
+
+	// service may not exceed 32k but problems occur before that
+	// so we limit it to 30k
+	if len(service) > 1024*30 {
+		return ErrSetDataTooBig
+	}
+
+	cred := wincred.NewGenericCredential(k.credName(service, username))
+	cred.UserName = username
+	cred.CredentialBlob = password
+	return cred.Write()
+}
+
 // Delete deletes a secret, identified by service & user, from the keyring.
 func (k windowsKeychain) Delete(service, username string) error {
 	cred, err := wincred.GetGenericCredential(k.credName(service, username))

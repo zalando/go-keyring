@@ -14,6 +14,10 @@ func (fallbackServiceProvider) Set(service, user, pass string) error {
 	return ErrUnsupportedPlatform
 }
 
+func (fallbackServiceProvider) SetBytes(service, user string, pass []byte) error {
+	return ErrUnsupportedPlatform
+}
+
 func (fallbackServiceProvider) Get(service, user string) (string, error) {
 	return "", ErrUnsupportedPlatform
 }

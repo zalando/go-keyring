@@ -40,6 +40,16 @@ func NewSecret(session dbus.ObjectPath, secret string) Secret {
 	}
 }
 
+// NewSecretFromBytes initializes a new Secret from a byte slice.
+func NewSecretFromBytes(session dbus.ObjectPath, secret []byte) Secret {
+	return Secret{
+		Session:     session,
+		Parameters:  []byte{},
+		Value:       secret,
+		ContentType: "text/plain; charset=utf8",
+	}
+}
+
 // SecretService is an interface for the Secret Service dbus API.
 type SecretService struct {
 	*dbus.Conn

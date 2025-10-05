@@ -21,6 +21,9 @@ var (
 type Keyring interface {
 	// Set password in keyring for user.
 	Set(service, user, password string) error
+	// SetBytes stores a secret from a byte slice, preventing string conversion
+	// and allowing the caller to zeroize the sensitive data after use.
+	SetBytes(service, user string, password []byte) error
 	// Get password from keyring given service and user name.
 	Get(service, user string) (string, error)
 	// Delete secret from keyring.
@@ -32,6 +35,12 @@ type Keyring interface {
 // Set password in keyring for user.
 func Set(service, user, password string) error {
 	return provider.Set(service, user, password)
+}
+
+// SetBytes stores a secret from a byte slice, preventing string conversion
+// and allowing the caller to zeroize the sensitive data after use.
+func SetBytes(service, user string, password []byte) error {
+	return provider.SetBytes(service, user, password)
 }
 
 // Get password from keyring given service and user name.

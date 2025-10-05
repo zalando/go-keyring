@@ -21,6 +21,22 @@ func (m *mockProvider) Set(service, user, pass string) error {
 	return nil
 }
 
+// SetBytes stores a secret from a byte slice, preventing string conversion
+// and allowing the caller to zeroize the sensitive data after use.
+func (m *mockProvider) SetBytes(service, user string, pass []byte) error {
+	if m.mockError != nil {
+		return m.mockError
+	}
+	if m.mockStore == nil {
+		m.mockStore = make(map[string]map[string]string)
+	}
+	if m.mockStore[service] == nil {
+		m.mockStore[service] = make(map[string]string)
+	}
+	m.mockStore[service][user] = string(pass)
+	return nil
+}
+
 // Get gets a secret from the keyring given a service name and a user.
 func (m *mockProvider) Get(service, user string) (string, error) {
 	if m.mockError != nil {

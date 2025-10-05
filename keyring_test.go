@@ -181,3 +181,31 @@ func TestDeleteAllEmptyService(t *testing.T) {
 		t.Errorf("Should not have deleted secret from another service")
 	}
 }
+
+// TestSetBytes tests setting a password from a byte slice to improve security.
+func TestSetBytes(t *testing.T) {
+	secretBytes := []byte("my-secret-password")
+
+	// Store the secret using SetBytes
+	err := SetBytes(service, user, secretBytes)
+	if err != nil {
+		t.Errorf("Should not fail, got: %s", err)
+	}
+
+	// Retrieve the secret using Get
+	pw, err := Get(service, user)
+	if err != nil {
+		t.Errorf("Should not fail, got: %s", err)
+	}
+
+	// Verify the retrieved secret matches the original
+	if string(secretBytes) != pw {
+		t.Errorf("Expected password %s, got %s", string(secretBytes), pw)
+	}
+
+	// Clean up
+	err = Delete(service, user)
+	if err != nil {
+		t.Errorf("Should not fail, got: %s", err)
+	}
+}

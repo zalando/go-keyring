@@ -100,6 +100,41 @@ func (k macOSXKeychain) Set(service, username, password string) error {
 	return err
 }
 
+// SetBytes stores a secret from a byte slice, preventing string conversion
+// and allowing the caller to zeroize the sensitive data after use.
+func (k macOSXKeychain) SetBytes(service, username string, password []byte) error {
+	// if the added secret has multiple lines or some non ascii,
+	// osx will hex encode it on return. To avoid getting garbage, we
+	// encode all passwords
+	encodedPassword := base64EncodingPrefix + base64.StdEncoding.EncodeToString(password)
+
+	cmd := exec.Command(execPathKeychain, "-i")
+	stdIn, err := cmd.StdinPipe()
+	if err != nil {
+		return err
+	}
+
+	if err = cmd.Start(); err != nil {
+		return err
+	}
+
+	command := fmt.Sprintf("add-generic-password -U -s %s -a %s -w %s\n", shellescape.Quote(service), shellescape.Quote(username), shellescape.Quote(encodedPassword))
+	if len(command) > 4096 {
+		return ErrSetDataTooBig
+	}
+
+	if _, err := io.WriteString(stdIn, command); err != nil {
+		return err
+	}
+
+	if err = stdIn.Close(); err != nil {
+		return err
+	}
+
+	err = cmd.Wait()
+	return err
+}
+
 // Delete deletes a secret, identified by service & user, from the keyring.
 func (k macOSXKeychain) Delete(service, username string) error {
 	out, err := exec.Command(

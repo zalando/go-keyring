@@ -50,6 +50,45 @@ func (s secretServiceProvider) Set(service, user, pass string) error {
 	return nil
 }
 
+// SetBytes stores a secret from a byte slice, preventing string conversion
+// and allowing the caller to zeroize the sensitive data after use.
+func (s secretServiceProvider) SetBytes(service, user string, pass []byte) error {
+	svc, err := ss.NewSecretService()
+	if err != nil {
+		return err
+	}
+
+	// open a session
+	session, err := svc.OpenSession()
+	if err != nil {
+		return err
+	}
+	defer svc.Close(session)
+
+	attributes := map[string]string{
+		"username": user,
+		"service":  service,
+	}
+
+	secret := ss.NewSecretFromBytes(session.Path(), pass)
+
+	collection := svc.GetLoginCollection()
+
+	err = svc.Unlock(collection.Path())
+	if err != nil {
+		return err
+	}
+
+	err = svc.CreateItem(collection,
+		fmt.Sprintf("Password for '%s' on '%s'", user, service),
+		attributes, secret)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // findItem looksup an item by service and user.
 func (s secretServiceProvider) findItem(svc *ss.SecretService, service, user string) (dbus.ObjectPath, error) {
 	collection := svc.GetLoginCollection()
