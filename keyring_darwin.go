@@ -35,6 +35,11 @@ const (
 
 type macOSXKeychain struct{}
 
+// SetDescription sets the description of the secret
+func (k macOSXKeychain) SetDescription(description string) {
+	//no-op for darwin
+}
+
 // func (*MacOSXKeychain) IsAvailable() bool {
 // 	return exec.Command(execPathKeychain).Run() != exec.ErrNotFound
 // }

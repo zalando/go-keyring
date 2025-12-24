@@ -181,3 +181,16 @@ func TestDeleteAllEmptyService(t *testing.T) {
 		t.Errorf("Should not have deleted secret from another service")
 	}
 }
+
+func TestSetDescription(t *testing.T) {
+	if runtime.GOOS != "windows" && runtime.GOOS != "darwin" {
+		SetDescription("foo bar")
+		err := Set(service, user, password)
+		if err != nil {
+			t.Errorf("Should not fail, got: %s", err)
+		}
+		if secretDescription != "foo bar" {
+			t.Errorf("Expected description foo bar, got %s", secretDescription)
+		}
+	}
+}

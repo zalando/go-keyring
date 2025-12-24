@@ -111,6 +111,14 @@ func TestMockDeleteAll(t *testing.T) {
 	}
 }
 
+func TestMockSetDescription(t *testing.T) {
+	mp := mockProvider{}
+	mp.SetDescription("foo bar")
+	if mp.description != "foo bar" {
+		t.Errorf("Expected description foo bar, got %s", mp.description)
+	}
+}
+
 func assertError(t *testing.T, err error, expected error) {
 	if err != expected {
 		t.Errorf("Expected error %s, got %s", expected, err)

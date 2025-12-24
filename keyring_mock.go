@@ -1,8 +1,9 @@
 package keyring
 
 type mockProvider struct {
-	mockStore map[string]map[string]string
-	mockError error
+	mockStore   map[string]map[string]string
+	mockError   error
+	description string
 }
 
 // Set stores user and pass in the keyring under the defined service
@@ -18,6 +19,7 @@ func (m *mockProvider) Set(service, user, pass string) error {
 		m.mockStore[service] = make(map[string]string)
 	}
 	m.mockStore[service][user] = pass
+	m.mockStore[service]["description"] = m.description
 	return nil
 }
 
@@ -57,6 +59,11 @@ func (m *mockProvider) DeleteAll(service string) error {
 	}
 	delete(m.mockStore, service)
 	return nil
+}
+
+// SetDescription sets the description of the secret
+func (m *mockProvider) SetDescription(description string) {
+	m.description = description
 }
 
 // MockInit sets the provider to a mocked memory store

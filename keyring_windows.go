@@ -9,6 +9,11 @@ import (
 
 type windowsKeychain struct{}
 
+// SetDescription sets the description of the secret
+func (k windowsKeychain) SetDescription(description string) {
+	//no-op for windows
+}
+
 // Get gets a secret from the keyring given a service name and a user.
 func (k windowsKeychain) Get(service, username string) (string, error) {
 	cred, err := wincred.GetGenericCredential(k.credName(service, username))
