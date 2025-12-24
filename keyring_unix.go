@@ -11,6 +11,14 @@ import (
 
 type secretServiceProvider struct{}
 
+// secretDescription holds a user set secret description
+var secretDescription string
+
+// SetDescription sets the description of the secret
+func (s secretServiceProvider) SetDescription(description string) {
+	secretDescription = description
+}
+
 // Set stores user and pass in the keyring under the defined service
 // name.
 func (s secretServiceProvider) Set(service, user, pass string) error {
@@ -40,8 +48,12 @@ func (s secretServiceProvider) Set(service, user, pass string) error {
 		return err
 	}
 
+	desc := fmt.Sprintf("Password for '%s' on '%s'", user, service)
+	if secretDescription != "" {
+		desc = secretDescription
+	}
 	err = svc.CreateItem(collection,
-		fmt.Sprintf("Password for '%s' on '%s'", user, service),
+		desc,
 		attributes, secret)
 	if err != nil {
 		return err

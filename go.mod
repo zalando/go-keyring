@@ -1,6 +1,6 @@
 module github.com/zalando/go-keyring
 
-go 1.18
+go 1.24.11
 
 require (
 	github.com/danieljoos/wincred v1.2.2
