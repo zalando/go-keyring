@@ -11,6 +11,7 @@ import (
 
 type secretServiceProvider struct{}
 
+// secretDescription holds a user set secret description
 var secretDescription string
 
 // SetDescription sets the description of the secret
