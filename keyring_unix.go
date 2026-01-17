@@ -177,6 +177,50 @@ func (s secretServiceProvider) DeleteAll(service string) error {
 	return nil
 }
 
+// ListUsers returns a list of all users for a given service
+func (s secretServiceProvider) ListUsers(service string) ([]string, error) {
+	if service == "" {
+		return []string{}, nil
+	}
+
+	svc, err := ss.NewSecretService()
+	if err != nil {
+		return nil, err
+	}
+
+	// Find all items for the service
+	items, err := s.findServiceItems(svc, service)
+	if err != nil {
+		// If service has no items, return empty list instead of error
+		if err == ErrNotFound {
+			return []string{}, nil
+		}
+		return nil, err
+	}
+
+	// Extract usernames from items
+	var users []string
+	seenUsers := make(map[string]bool)
+
+	for _, item := range items {
+		// Get item attributes
+		attrs, err := svc.GetItemAttributes(item)
+		if err != nil {
+			continue // Skip items we can't read
+		}
+
+		// Extract username from attributes
+		if username, ok := attrs["username"]; ok {
+			if !seenUsers[username] {
+				seenUsers[username] = true
+				users = append(users, username)
+			}
+		}
+	}
+
+	return users, nil
+}
+
 func init() {
 	provider = secretServiceProvider{}
 }

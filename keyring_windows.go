@@ -93,6 +93,35 @@ func (k windowsKeychain) DeleteAll(service string) error {
 	return nil
 }
 
+// ListUsers returns a list of all users for a given service
+func (k windowsKeychain) ListUsers(service string) ([]string, error) {
+	if service == "" {
+		return []string{}, nil
+	}
+
+	creds, err := wincred.List()
+	if err != nil {
+		return nil, err
+	}
+
+	prefix := k.credName(service, "")
+	var users []string
+	seenUsers := make(map[string]bool)
+
+	for _, cred := range creds {
+		if strings.HasPrefix(cred.TargetName, prefix) {
+			// Extract username from "service:username" format
+			username := strings.TrimPrefix(cred.TargetName, prefix)
+			if username != "" && !seenUsers[username] {
+				seenUsers[username] = true
+				users = append(users, username)
+			}
+		}
+	}
+
+	return users, nil
+}
+
 // credName combines service and username to a single string.
 func (k windowsKeychain) credName(service, username string) string {
 	return service + ":" + username

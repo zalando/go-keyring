@@ -135,6 +135,57 @@ func (k macOSXKeychain) DeleteAll(service string) error {
 
 }
 
+// ListUsers returns a list of all users for a given service
+func (k macOSXKeychain) ListUsers(service string) ([]string, error) {
+	if service == "" {
+		return []string{}, nil
+	}
+
+	out, err := exec.Command(execPathKeychain, "dump-keyring").CombinedOutput()
+	if err != nil {
+		return nil, err
+	}
+
+	var users []string
+	seenUsers := make(map[string]bool)
+	lines := strings.Split(string(out), "\n")
+	
+	// Parse dump-keyring output looking for generic passwords matching our service
+	// Format: keychain: "/Users/username/Library/Keychains/login.keychain-db"
+	//         class: "genp"
+	//         attributes:
+	//             "svce"<blob>="service-name"
+	//             "acct"<blob>="account-name"
+	for i := 0; i < len(lines); i++ {
+		line := strings.TrimSpace(lines[i])
+		
+		// Look for service attribute matching our service
+		if strings.Contains(line, `"svce"`) && strings.Contains(line, `="`+service+`"`) {
+			// Found a matching service, now look for the account attribute
+			// It should be nearby in the attributes section
+			for j := i - 10; j < i+10 && j < len(lines) && j >= 0; j++ {
+				acctLine := strings.TrimSpace(lines[j])
+				if strings.Contains(acctLine, `"acct"`) {
+					// Extract account name from: "acct"<blob>="username"
+					if idx := strings.Index(acctLine, `="`); idx != -1 {
+						start := idx + 2
+						if end := strings.Index(acctLine[start:], `"`); end != -1 {
+							username := acctLine[start : start+end]
+							if !seenUsers[username] {
+								seenUsers[username] = true
+								users = append(users, username)
+							}
+							break
+						}
+					}
+				}
+			}
+		}
+	}
+
+	return users, nil
+}
+
 func init() {
 	provider = macOSXKeychain{}
 }
