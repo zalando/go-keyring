@@ -21,8 +21,7 @@ keyring instead of having the user type it on every invocation.
 
 #### OS X
 
-The OS X implementation depends on the `/usr/bin/security` binary for
-interfacing with the OS X keychain. It should be available by default.
+The OS X implementation uses [purego](https://pkg.go.dev/github.com/ebitengine/purego) to call Security Framework API.
 
 #### Linux and *BSD
 

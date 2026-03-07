@@ -17,17 +17,12 @@ package keyring
 import (
 	"encoding/base64"
 	"encoding/hex"
-	"fmt"
-	"io"
-	"os/exec"
 	"strings"
 
-	"github.com/zalando/go-keyring/internal/shellescape"
+	"github.com/zalando/go-keyring/internal/darwin"
 )
 
 const (
-	execPathKeychain = "/usr/bin/security"
-
 	// encodingPrefix is a well-known prefix added to strings encoded by Set.
 	encodingPrefix       = "go-keyring-encoded:"
 	base64EncodingPrefix = "go-keyring-base64:"
@@ -41,19 +36,14 @@ type macOSXKeychain struct{}
 
 // Get password from macos keyring given service and user name.
 func (k macOSXKeychain) Get(service, username string) (string, error) {
-	out, err := exec.Command(
-		execPathKeychain,
-		"find-generic-password",
-		"-s", service,
-		"-wa", username).CombinedOutput()
-	if err != nil {
-		if strings.Contains(string(out), "could not be found") {
-			err = ErrNotFound
-		}
+	out, err := darwin.FindGenericPassword(service, username)
+	if err == darwin.ErrNotFound {
+		return "", ErrNotFound
+	} else if err != nil {
 		return "", err
 	}
 
-	trimStr := strings.TrimSpace(string(out[:]))
+	trimStr := strings.TrimSpace(out)
 	// if the string has the well-known prefix, assume it's encoded
 	if strings.HasPrefix(trimStr, encodingPrefix) {
 		dec, err := hex.DecodeString(trimStr[len(encodingPrefix):])
@@ -73,42 +63,18 @@ func (k macOSXKeychain) Set(service, username, password string) error {
 	// encode all passwords
 	password = base64EncodingPrefix + base64.StdEncoding.EncodeToString([]byte(password))
 
-	cmd := exec.Command(execPathKeychain, "-i")
-	stdIn, err := cmd.StdinPipe()
-	if err != nil {
-		return err
-	}
-
-	if err = cmd.Start(); err != nil {
-		return err
-	}
-
-	command := fmt.Sprintf("add-generic-password -U -s %s -a %s -w %s\n", shellescape.Quote(service), shellescape.Quote(username), shellescape.Quote(password))
-	if len(command) > 4096 {
+	if len(service)+len(username)+len(password) > 4096 {
 		return ErrSetDataTooBig
 	}
 
-	if _, err := io.WriteString(stdIn, command); err != nil {
-		return err
-	}
-
-	if err = stdIn.Close(); err != nil {
-		return err
-	}
-
-	err = cmd.Wait()
-	return err
+	return darwin.AddGenericPassword(service, username, password)
 }
 
 // Delete deletes a secret, identified by service & user, from the keyring.
 func (k macOSXKeychain) Delete(service, username string) error {
-	out, err := exec.Command(
-		execPathKeychain,
-		"delete-generic-password",
-		"-s", service,
-		"-a", username).CombinedOutput()
-	if strings.Contains(string(out), "could not be found") {
-		err = ErrNotFound
+	err := darwin.DeleteGenericPassword(service, username)
+	if err == darwin.ErrNotFound {
+		return ErrNotFound
 	}
 	return err
 }
@@ -119,20 +85,7 @@ func (k macOSXKeychain) DeleteAll(service string) error {
 	if service == "" {
 		return ErrNotFound
 	}
-	// Delete each secret in a while loop until there is no more left
-	// under the service
-	for {
-		out, err := exec.Command(
-			execPathKeychain,
-			"delete-generic-password",
-			"-s", service).CombinedOutput()
-		if strings.Contains(string(out), "could not be found") {
-			return nil
-		} else if err != nil {
-			return err
-		}
-	}
-
+	return darwin.DeleteGenericPasswords(service)
 }
 
 func init() {
