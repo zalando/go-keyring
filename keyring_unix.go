@@ -222,5 +222,7 @@ func (s secretServiceProvider) ListUsers(service string) ([]string, error) {
 }
 
 func init() {
-	provider = secretServiceProvider{}
+	p := secretServiceProvider{}
+	provider = p
+	restoreProvider = func() { provider = p }
 }

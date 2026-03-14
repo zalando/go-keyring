@@ -141,51 +141,73 @@ func (k macOSXKeychain) ListUsers(service string) ([]string, error) {
 		return []string{}, nil
 	}
 
-	out, err := exec.Command(execPathKeychain, "dump-keyring").CombinedOutput()
+	// Get the default keychain since there can be multiple keychains
+	defaultKeychainOut, err := exec.Command(execPathKeychain, "default-keychain").CombinedOutput()
+	if err != nil {
+		return nil, err
+	}
+	// Take first line in case multiple default keychains are returned
+	firstLine := strings.SplitN(strings.TrimSpace(string(defaultKeychainOut)), "\n", 2)[0]
+	defaultKeychain := strings.Trim(strings.TrimSpace(firstLine), `"`)
+
+	// dump-keychain (not dump-keyring) requires a keychain path
+	out, err := exec.Command(execPathKeychain, "dump-keychain", defaultKeychain).CombinedOutput()
 	if err != nil {
 		return nil, err
 	}
 
+	// Parse dump-keychain output. Format:
+	// keychain: "/Users/username/Library/Keychains/login.keychain-db"
+	//     class: "genp"
+	//     attributes:
+	//         "svce"<blob>="service-name"
+	//         "acct"<blob>="account-name"
+	valueOf := func(s, prefix string) string {
+		return strings.Trim(strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(s), prefix)), `"`)
+	}
+
 	var users []string
 	seenUsers := make(map[string]bool)
+	var currentKeychain, currentSvc, currentAcct string
 	lines := strings.Split(string(out), "\n")
-	
-	// Parse dump-keyring output looking for generic passwords matching our service
-	// Format: keychain: "/Users/username/Library/Keychains/login.keychain-db"
-	//         class: "genp"
-	//         attributes:
-	//             "svce"<blob>="service-name"
-	//             "acct"<blob>="account-name"
-	for i := 0; i < len(lines); i++ {
-		line := strings.TrimSpace(lines[i])
-		
-		// Look for service attribute matching our service
-		if strings.Contains(line, `"svce"`) && strings.Contains(line, `="`+service+`"`) {
-			// Found a matching service, now look for the account attribute
-			// It should be nearby in the attributes section
-			for j := i - 10; j < i+10 && j < len(lines) && j >= 0; j++ {
-				acctLine := strings.TrimSpace(lines[j])
-				if strings.Contains(acctLine, `"acct"`) {
-					// Extract account name from: "acct"<blob>="username"
-					if idx := strings.Index(acctLine, `="`); idx != -1 {
-						start := idx + 2
-						if end := strings.Index(acctLine[start:], `"`); end != -1 {
-							username := acctLine[start : start+end]
-							if !seenUsers[username] {
-								seenUsers[username] = true
-								users = append(users, username)
-							}
-							break
-						}
-					}
+
+	for _, line := range lines {
+		switch {
+		case strings.HasPrefix(strings.TrimSpace(line), "keychain:"):
+			// Save previous entry if it matched
+			if currentKeychain == defaultKeychain && currentSvc == service && currentAcct != "" && !seenUsers[currentAcct] {
+				seenUsers[currentAcct] = true
+				users = append(users, currentAcct)
+			}
+			currentKeychain = valueOf(line, "keychain:")
+			currentSvc = ""
+			currentAcct = ""
+		case strings.Contains(line, `"svce"`):
+			if idx := strings.Index(line, `="`); idx != -1 {
+				start := idx + 2
+				if end := strings.Index(line[start:], `"`); end != -1 {
+					currentSvc = line[start : start+end]
+				}
+			}
+		case strings.Contains(line, `"acct"`):
+			if idx := strings.Index(line, `="`); idx != -1 {
+				start := idx + 2
+				if end := strings.Index(line[start:], `"`); end != -1 {
+					currentAcct = line[start : start+end]
 				}
 			}
 		}
+	}
+	// Don't forget the last entry
+	if currentKeychain == defaultKeychain && currentSvc == service && currentAcct != "" && !seenUsers[currentAcct] {
+		users = append(users, currentAcct)
 	}
 
 	return users, nil
 }
 
 func init() {
-	provider = macOSXKeychain{}
+	p := macOSXKeychain{}
+	provider = p
+	restoreProvider = func() { provider = p }
 }

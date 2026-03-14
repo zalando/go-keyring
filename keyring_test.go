@@ -1,7 +1,10 @@
 package keyring
 
 import (
+	"fmt"
+	"log"
 	"runtime"
+	"sort"
 	"strings"
 	"testing"
 )
@@ -265,6 +268,38 @@ func TestListUsersSingleUser(t *testing.T) {
 
 	// Clean up
 	_ = Delete(service3, "single-user")
+}
+
+// ExampleListUsers demonstrates listing configured users for a service using the mock provider.
+// The example uses MockInit so it runs without requiring a system keyring.
+func ExampleListUsers() {
+	MockInit()
+	defer MockRestore()
+
+	service := "my-cli"
+
+	// Store some credentials
+	Set(service, "github", "ghp_token123")
+	Set(service, "gitlab", "glpat_token456")
+	Set(service, "aws", "aws_secret789")
+
+	// List all configured providers
+	users, err := ListUsers(service)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	sort.Strings(users) // deterministic output for the example
+	fmt.Println("Configured providers:")
+	for _, u := range users {
+		fmt.Printf("  - %s\n", u)
+	}
+
+	// Output:
+	// Configured providers:
+	//   - aws
+	//   - github
+	//   - gitlab
 }
 
 // TestListUsersMultipleServices tests that ListUsers only returns users for the specified service.

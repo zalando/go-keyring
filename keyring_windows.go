@@ -128,5 +128,7 @@ func (k windowsKeychain) credName(service, username string) string {
 }
 
 func init() {
-	provider = windowsKeychain{}
+	p := windowsKeychain{}
+	provider = p
+	restoreProvider = func() { provider = p }
 }

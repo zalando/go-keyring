@@ -78,6 +78,14 @@ func MockInit() {
 	provider = &mockProvider{}
 }
 
+// MockRestore restores the provider to the platform default.
+// Call after MockInit when the mock is no longer needed (e.g. in defer).
+func MockRestore() {
+	if restoreProvider != nil {
+		restoreProvider()
+	}
+}
+
 // MockInitWithError sets the provider to a mocked memory store
 // that returns the given error on all operations
 func MockInitWithError(err error) {
