@@ -240,6 +240,22 @@ func (s *SecretService) GetSecret(itemPath dbus.ObjectPath, session dbus.ObjectP
 	return &secret, nil
 }
 
+// GetItemAttributes gets the attributes of an item.
+func (s *SecretService) GetItemAttributes(itemPath dbus.ObjectPath) (map[string]string, error) {
+	obj := s.Object(serviceName, itemPath)
+	variant, err := obj.GetProperty(itemInterface + ".Attributes")
+	if err != nil {
+		return nil, err
+	}
+	
+	attrs, ok := variant.Value().(map[string]string)
+	if !ok {
+		return nil, fmt.Errorf("failed to parse attributes")
+	}
+	
+	return attrs, nil
+}
+
 // Delete deletes an item from the collection.
 func (s *SecretService) Delete(itemPath dbus.ObjectPath) error {
 	var prompt dbus.ObjectPath
