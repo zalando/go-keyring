@@ -21,7 +21,7 @@ jobs:
 
     steps:
     - name: Check out code into $GITHUB_WORKSPACE directory
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Set up Go
       uses: actions/setup-go@v5
@@ -60,7 +60,7 @@ jobs:
 
     steps:
     - name: Check out code into $GITHUB_WORKSPACE directory
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
 
     - name: Set up Go
       uses: actions/setup-go@v5
@@ -86,7 +86,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Test in FreeBSD
       id: test
       uses: vmactions/freebsd-vm@v1
