@@ -19,12 +19,15 @@ jobs:
       env:
         DEBIAN_FRONTEND: noninteractive
 
+    permissions:
+      contents: read
+
     steps:
     - name: Check out code into $GITHUB_WORKSPACE directory
-      uses: actions/checkout@v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
     - name: Set up Go
-      uses: actions/setup-go@v6
+      uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417
       with:
         go-version: ^1.22
       id: go
@@ -58,12 +61,15 @@ jobs:
       matrix:
         os: [macOS-latest, windows-latest]
 
+    permissions:
+      contents: read
+
     steps:
     - name: Check out code into $GITHUB_WORKSPACE directory
-      uses: actions/checkout@v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
 
     - name: Set up Go
-      uses: actions/setup-go@v6
+      uses: actions/setup-go@4b73464bb391d4059bd26b0524d20df3927bd417
       with:
         go-version: ^1.22
       id: go
@@ -85,8 +91,11 @@ jobs:
     # runs-on: macos-12
     runs-on: ubuntu-latest
 
+    permissions:
+      contents: read
+
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
     - name: Test in FreeBSD
       id: test
       uses: vmactions/freebsd-vm@v1
