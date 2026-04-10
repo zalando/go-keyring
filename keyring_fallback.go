@@ -25,3 +25,7 @@ func (fallbackServiceProvider) Delete(service, user string) error {
 func (fallbackServiceProvider) DeleteAll(service string) error {
 	return ErrUnsupportedPlatform
 }
+
+func (fallbackServiceProvider) ListUsers(service string) ([]string, error) {
+	return nil, ErrUnsupportedPlatform
+}
