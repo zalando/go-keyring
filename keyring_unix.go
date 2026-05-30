@@ -4,6 +4,8 @@ package keyring
 
 import (
 	"fmt"
+	"slices"
+	"sort"
 
 	dbus "github.com/godbus/dbus/v5"
 	ss "github.com/zalando/go-keyring/secret_service"
@@ -188,37 +190,26 @@ func (s secretServiceProvider) ListUsers(service string) ([]string, error) {
 		return nil, err
 	}
 
-	// Find all items for the service
 	items, err := s.findServiceItems(svc, service)
 	if err != nil {
-		// If service has no items, return empty list instead of error
 		if err == ErrNotFound {
-			return []string{}, nil
+			return []string{}, nil // same empty-service semantics as DeleteAll
 		}
 		return nil, err
 	}
 
-	// Extract usernames from items
 	var users []string
-	seenUsers := make(map[string]bool)
-
 	for _, item := range items {
-		// Get item attributes
 		attrs, err := svc.GetItemAttributes(item)
 		if err != nil {
-			continue // Skip items we can't read
+			continue
 		}
-
-		// Extract username from attributes
-		if username, ok := attrs["username"]; ok {
-			if !seenUsers[username] {
-				seenUsers[username] = true
-				users = append(users, username)
-			}
+		if username := attrs["username"]; username != "" {
+			users = append(users, username)
 		}
 	}
-
-	return users, nil
+	sort.Strings(users)
+	return slices.Compact(users), nil
 }
 
 func init() {

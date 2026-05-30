@@ -1,6 +1,8 @@
 package keyring
 
 import (
+	"slices"
+	"sort"
 	"strings"
 	"syscall"
 
@@ -106,20 +108,17 @@ func (k windowsKeychain) ListUsers(service string) ([]string, error) {
 
 	prefix := k.credName(service, "")
 	var users []string
-	seenUsers := make(map[string]bool)
 
 	for _, cred := range creds {
 		if strings.HasPrefix(cred.TargetName, prefix) {
-			// Extract username from "service:username" format
 			username := strings.TrimPrefix(cred.TargetName, prefix)
-			if username != "" && !seenUsers[username] {
-				seenUsers[username] = true
+			if username != "" {
 				users = append(users, username)
 			}
 		}
 	}
-
-	return users, nil
+	sort.Strings(users)
+	return slices.Compact(users), nil
 }
 
 // credName combines service and username to a single string.

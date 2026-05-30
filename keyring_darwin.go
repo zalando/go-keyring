@@ -156,16 +156,6 @@ func (k macOSXKeychain) ListUsers(service string) ([]string, error) {
 		return nil, err
 	}
 
-	// Parse dump-keychain output. Format:
-	// keychain: "/Users/username/Library/Keychains/login.keychain-db"
-	//     class: "genp"
-	//     attributes:
-	//         "svce"<blob>="service-name"
-	//         "acct"<blob>="account-name"
-	valueOf := func(s, prefix string) string {
-		return strings.Trim(strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(s), prefix)), `"`)
-	}
-
 	var users []string
 	seenUsers := make(map[string]bool)
 	var currentKeychain, currentSvc, currentAcct string
@@ -174,36 +164,37 @@ func (k macOSXKeychain) ListUsers(service string) ([]string, error) {
 	for _, line := range lines {
 		switch {
 		case strings.HasPrefix(strings.TrimSpace(line), "keychain:"):
-			// Save previous entry if it matched
 			if currentKeychain == defaultKeychain && currentSvc == service && currentAcct != "" && !seenUsers[currentAcct] {
 				seenUsers[currentAcct] = true
 				users = append(users, currentAcct)
 			}
-			currentKeychain = valueOf(line, "keychain:")
+			currentKeychain = strings.Trim(strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(line), "keychain:")), `"`)
 			currentSvc = ""
 			currentAcct = ""
 		case strings.Contains(line, `"svce"`):
-			if idx := strings.Index(line, `="`); idx != -1 {
-				start := idx + 2
-				if end := strings.Index(line[start:], `"`); end != -1 {
-					currentSvc = line[start : start+end]
-				}
-			}
+			currentSvc = parseDumpKeychainBlob(line)
 		case strings.Contains(line, `"acct"`):
-			if idx := strings.Index(line, `="`); idx != -1 {
-				start := idx + 2
-				if end := strings.Index(line[start:], `"`); end != -1 {
-					currentAcct = line[start : start+end]
-				}
-			}
+			currentAcct = parseDumpKeychainBlob(line)
 		}
 	}
-	// Don't forget the last entry
 	if currentKeychain == defaultKeychain && currentSvc == service && currentAcct != "" && !seenUsers[currentAcct] {
 		users = append(users, currentAcct)
 	}
 
 	return users, nil
+}
+
+func parseDumpKeychainBlob(line string) string {
+	idx := strings.Index(line, `="`)
+	if idx == -1 {
+		return ""
+	}
+	start := idx + 2
+	end := strings.Index(line[start:], `"`)
+	if end == -1 {
+		return ""
+	}
+	return line[start : start+end]
 }
 
 func init() {

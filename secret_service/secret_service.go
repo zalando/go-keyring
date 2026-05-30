@@ -247,12 +247,12 @@ func (s *SecretService) GetItemAttributes(itemPath dbus.ObjectPath) (map[string]
 	if err != nil {
 		return nil, err
 	}
-	
+
 	attrs, ok := variant.Value().(map[string]string)
 	if !ok {
 		return nil, fmt.Errorf("failed to parse attributes")
 	}
-	
+
 	return attrs, nil
 }
 
