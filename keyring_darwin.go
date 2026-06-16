@@ -135,6 +135,70 @@ func (k macOSXKeychain) DeleteAll(service string) error {
 
 }
 
+// ListUsers returns a list of all users for a given service
+func (k macOSXKeychain) ListUsers(service string) ([]string, error) {
+	if service == "" {
+		return []string{}, nil
+	}
+
+	// Get the default keychain since there can be multiple keychains
+	defaultKeychainOut, err := exec.Command(execPathKeychain, "default-keychain").CombinedOutput()
+	if err != nil {
+		return nil, err
+	}
+	// Take first line in case multiple default keychains are returned
+	firstLine := strings.SplitN(strings.TrimSpace(string(defaultKeychainOut)), "\n", 2)[0]
+	defaultKeychain := strings.Trim(strings.TrimSpace(firstLine), `"`)
+
+	// dump-keychain (not dump-keyring) requires a keychain path
+	out, err := exec.Command(execPathKeychain, "dump-keychain", defaultKeychain).CombinedOutput()
+	if err != nil {
+		return nil, err
+	}
+
+	var users []string
+	seenUsers := make(map[string]bool)
+	var currentKeychain, currentSvc, currentAcct string
+	lines := strings.Split(string(out), "\n")
+
+	for _, line := range lines {
+		switch {
+		case strings.HasPrefix(strings.TrimSpace(line), "keychain:"):
+			if currentKeychain == defaultKeychain && currentSvc == service && currentAcct != "" && !seenUsers[currentAcct] {
+				seenUsers[currentAcct] = true
+				users = append(users, currentAcct)
+			}
+			currentKeychain = strings.Trim(strings.TrimSpace(strings.TrimPrefix(strings.TrimSpace(line), "keychain:")), `"`)
+			currentSvc = ""
+			currentAcct = ""
+		case strings.Contains(line, `"svce"`):
+			currentSvc = parseDumpKeychainBlob(line)
+		case strings.Contains(line, `"acct"`):
+			currentAcct = parseDumpKeychainBlob(line)
+		}
+	}
+	if currentKeychain == defaultKeychain && currentSvc == service && currentAcct != "" && !seenUsers[currentAcct] {
+		users = append(users, currentAcct)
+	}
+
+	return users, nil
+}
+
+func parseDumpKeychainBlob(line string) string {
+	idx := strings.Index(line, `="`)
+	if idx == -1 {
+		return ""
+	}
+	start := idx + 2
+	end := strings.Index(line[start:], `"`)
+	if end == -1 {
+		return ""
+	}
+	return line[start : start+end]
+}
+
 func init() {
-	provider = macOSXKeychain{}
+	p := macOSXKeychain{}
+	provider = p
+	restoreProvider = func() { provider = p }
 }

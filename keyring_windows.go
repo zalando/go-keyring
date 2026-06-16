@@ -1,6 +1,8 @@
 package keyring
 
 import (
+	"slices"
+	"sort"
 	"strings"
 	"syscall"
 
@@ -93,11 +95,39 @@ func (k windowsKeychain) DeleteAll(service string) error {
 	return nil
 }
 
+// ListUsers returns a list of all users for a given service
+func (k windowsKeychain) ListUsers(service string) ([]string, error) {
+	if service == "" {
+		return []string{}, nil
+	}
+
+	creds, err := wincred.List()
+	if err != nil {
+		return nil, err
+	}
+
+	prefix := k.credName(service, "")
+	var users []string
+
+	for _, cred := range creds {
+		if strings.HasPrefix(cred.TargetName, prefix) {
+			username := strings.TrimPrefix(cred.TargetName, prefix)
+			if username != "" {
+				users = append(users, username)
+			}
+		}
+	}
+	sort.Strings(users)
+	return slices.Compact(users), nil
+}
+
 // credName combines service and username to a single string.
 func (k windowsKeychain) credName(service, username string) string {
 	return service + ":" + username
 }
 
 func init() {
-	provider = windowsKeychain{}
+	p := windowsKeychain{}
+	provider = p
+	restoreProvider = func() { provider = p }
 }

@@ -59,9 +59,31 @@ func (m *mockProvider) DeleteAll(service string) error {
 	return nil
 }
 
+// ListUsers returns a list of all users for a given service
+func (m *mockProvider) ListUsers(service string) ([]string, error) {
+	if m.mockError != nil {
+		return nil, m.mockError
+	}
+	users := []string{}
+	if m.mockStore != nil && m.mockStore[service] != nil {
+		for user := range m.mockStore[service] {
+			users = append(users, user)
+		}
+	}
+	return users, nil
+}
+
 // MockInit sets the provider to a mocked memory store
 func MockInit() {
 	provider = &mockProvider{}
+}
+
+// MockRestore restores the provider to the platform default.
+// Call after MockInit when the mock is no longer needed (e.g. in defer).
+func MockRestore() {
+	if restoreProvider != nil {
+		restoreProvider()
+	}
 }
 
 // MockInitWithError sets the provider to a mocked memory store
