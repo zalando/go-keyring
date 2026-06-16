@@ -1,9 +1,9 @@
 package ss
 
 import (
-	"fmt"
-
 	"errors"
+	"fmt"
+	"unicode/utf8"
 
 	dbus "github.com/godbus/dbus/v5"
 )
@@ -32,11 +32,18 @@ type Secret struct {
 
 // NewSecret initializes a new Secret.
 func NewSecret(session dbus.ObjectPath, secret string) Secret {
+	value := []byte(secret)
+
+	contentType := "application/octet-stream"
+	if utf8.Valid(value) {
+		contentType = "text/plain; charset=utf-8"
+	}
+
 	return Secret{
 		Session:     session,
 		Parameters:  []byte{},
-		Value:       []byte(secret),
-		ContentType: "text/plain; charset=utf8",
+		Value:       value,
+		ContentType: contentType,
 	}
 }
 
