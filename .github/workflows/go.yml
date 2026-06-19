@@ -24,7 +24,7 @@ jobs:
 
     steps:
     - name: Check out code into $GITHUB_WORKSPACE directory
-      uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
     - name: Set up Go
       uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c
@@ -66,7 +66,7 @@ jobs:
 
     steps:
     - name: Check out code into $GITHUB_WORKSPACE directory
-      uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
 
     - name: Set up Go
       uses: actions/setup-go@4a3601121dd01d1626a1e23e37211e3254c1c06c
@@ -95,7 +95,7 @@ jobs:
       contents: read
 
     steps:
-    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10
+    - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
     - name: Test in FreeBSD
       id: test
       uses: vmactions/freebsd-vm@v1
