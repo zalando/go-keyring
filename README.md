@@ -260,7 +260,7 @@ Please use GitHub issues as the starting point for contributions, new ideas and/
 
 Thanks to:
 
-* [your name here]
+* [GrzegorzPiotrOrchel]
 
 ## License
 
