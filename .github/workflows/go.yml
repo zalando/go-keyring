@@ -54,6 +54,54 @@ jobs:
         go test -v ./...
       shell: dbus-run-session -- bash --noprofile --norc -eo pipefail {0}
 
+  build-wsl:
+    name: Build (WSL)
+    runs-on: windows-latest
+
+    permissions:
+      contents: read
+
+    steps:
+    - name: Check out code into $GITHUB_WORKSPACE directory
+      uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0
+
+    - name: Set up WSL
+      uses: Vampire/setup-wsl@d1da7f2c0322a5ee4f24975344f67fc0f5baf364 # v7
+      with:
+        distribution: Ubuntu-24.04
+        additional-packages: ca-certificates curl
+
+    - name: Install Go
+      shell: wsl-bash {0}
+      run: |
+        GO_VERSION=$(curl -fsSL "https://go.dev/VERSION?m=text" | head -n1)
+        echo "Installing ${GO_VERSION}"
+        curl -fsSL "https://go.dev/dl/${GO_VERSION}.linux-amd64.tar.gz" -o /tmp/go.tar.gz
+        rm -rf /usr/local/go
+        tar -C /usr/local -xzf /tmp/go.tar.gz
+
+    - name: Get dependencies
+      shell: wsl-bash {0}
+      run: |
+        export PATH=$PATH:/usr/local/go/bin
+        go get -v -t -d ./...
+
+    - name: Build
+      shell: wsl-bash {0}
+      run: |
+        export PATH=$PATH:/usr/local/go/bin
+        go build -v ./...
+
+    - name: Test
+      shell: wsl-bash {0}
+      run: |
+        export PATH=$PATH:/usr/local/go/bin
+        # Sanity check that we are actually running under WSL with Windows
+        # interop enabled, so the tests exercise the Windows Credential Manager
+        # backend rather than the secret-service fallback.
+        powershell.exe -NoProfile -Command '$PSVersionTable.PSVersion.ToString()'
+        go test -v ./...
+
   build-other:
     name: Build
     runs-on: ${{ matrix.os }}
