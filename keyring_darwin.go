@@ -21,8 +21,6 @@ import (
 	"io"
 	"os/exec"
 	"strings"
-
-	"github.com/zalando/go-keyring/internal/shellescape"
 )
 
 const (
@@ -83,7 +81,7 @@ func (k macOSXKeychain) Set(service, username, password string) error {
 		return err
 	}
 
-	command := fmt.Sprintf("add-generic-password -U -s %s -a %s -w %s\n", shellescape.Quote(service), shellescape.Quote(username), shellescape.Quote(password))
+	command := fmt.Sprintf("add-generic-password -U -s %s -a %s -w %s\n", securityInteractiveQuote(service), securityInteractiveQuote(username), securityInteractiveQuote(password))
 	if len(command) > 4096 {
 		return ErrSetDataTooBig
 	}
@@ -182,6 +180,25 @@ func (k macOSXKeychain) ListUsers(service string) ([]string, error) {
 	}
 
 	return users, nil
+}
+
+// securityInteractiveQuote quotes one argument for security -i.
+// That splitter treats a backslash as an escape inside single quotes, so a
+// POSIX shell quote drops a backslash and rejects a single quote. Double
+// quotes, with backslash and double quote escaped, keep every byte of the line.
+func securityInteractiveQuote(s string) string {
+	var b strings.Builder
+	b.Grow(len(s) + 2)
+	b.WriteByte('"')
+	for i := 0; i < len(s); i++ {
+		c := s[i]
+		if c == '\\' || c == '"' {
+			b.WriteByte('\\')
+		}
+		b.WriteByte(c)
+	}
+	b.WriteByte('"')
+	return b.String()
 }
 
 func parseDumpKeychainBlob(line string) string {
