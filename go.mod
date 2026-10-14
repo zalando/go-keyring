@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/danieljoos/wincred v1.2.3
+	github.com/ebitengine/purego v0.10.0
 	github.com/godbus/dbus/v5 v5.2.2
 )
 
