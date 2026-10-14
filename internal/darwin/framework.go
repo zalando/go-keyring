@@ -39,17 +39,24 @@ var (
 	kSecAttrAccount          uintptr
 	kSecValueData            uintptr
 	kSecReturnData           uintptr
+	kSecReturnAttributes     uintptr
 	kSecMatchLimit           uintptr
 	kSecMatchLimitAll        uintptr
 )
 
 var (
-	CFDictionaryCreate        func(allocator uintptr, keys, values *uintptr, numValues int64, keyCallBacks, valueCallBacks uintptr) uintptr
-	CFStringCreateWithCString func(allocator uintptr, cStr string, encoding uint32) uintptr
-	CFDataCreate              func(alloc uintptr, bytes []byte, length int64) uintptr
-	CFDataGetLength           func(theData uintptr) int64
-	CFDataGetBytes            func(theData uintptr, theRange _CFRange, buffer []byte)
-	CFRelease                 func(cf uintptr)
+	CFDictionaryCreate                func(allocator uintptr, keys, values *uintptr, numValues int64, keyCallBacks, valueCallBacks uintptr) uintptr
+	CFStringCreateWithCString         func(allocator uintptr, cStr string, encoding uint32) uintptr
+	CFDataCreate                      func(alloc uintptr, bytes []byte, length int64) uintptr
+	CFDataGetLength                   func(theData uintptr) int64
+	CFDataGetBytes                    func(theData uintptr, theRange _CFRange, buffer []byte)
+	CFRelease                         func(cf uintptr)
+	CFArrayGetCount                   func(theArray uintptr) int64
+	CFArrayGetValueAtIndex            func(theArray uintptr, idx int64) uintptr
+	CFDictionaryGetValue              func(theDict, key uintptr) uintptr
+	CFStringGetLength                 func(theString uintptr) int64
+	CFStringGetMaximumSizeForEncoding func(length int64, encoding uint32) int64
+	CFStringGetCString                func(theString uintptr, buffer []byte, bufferSize int64, encoding uint32) bool
 )
 
 var (
@@ -72,6 +79,12 @@ func init() {
 	purego.RegisterLibFunc(&CFDataGetLength, cfLib, "CFDataGetLength")
 	purego.RegisterLibFunc(&CFDataGetBytes, cfLib, "CFDataGetBytes")
 	purego.RegisterLibFunc(&CFRelease, cfLib, "CFRelease")
+	purego.RegisterLibFunc(&CFArrayGetCount, cfLib, "CFArrayGetCount")
+	purego.RegisterLibFunc(&CFArrayGetValueAtIndex, cfLib, "CFArrayGetValueAtIndex")
+	purego.RegisterLibFunc(&CFDictionaryGetValue, cfLib, "CFDictionaryGetValue")
+	purego.RegisterLibFunc(&CFStringGetLength, cfLib, "CFStringGetLength")
+	purego.RegisterLibFunc(&CFStringGetMaximumSizeForEncoding, cfLib, "CFStringGetMaximumSizeForEncoding")
+	purego.RegisterLibFunc(&CFStringGetCString, cfLib, "CFStringGetCString")
 
 	secLib := must(purego.Dlopen("/System/Library/Frameworks/Security.framework/Security", purego.RTLD_NOW|purego.RTLD_GLOBAL))
 
@@ -81,6 +94,7 @@ func init() {
 	kSecAttrAccount = deref(must(purego.Dlsym(secLib, "kSecAttrAccount")))
 	kSecValueData = deref(must(purego.Dlsym(secLib, "kSecValueData")))
 	kSecReturnData = deref(must(purego.Dlsym(secLib, "kSecReturnData")))
+	kSecReturnAttributes = deref(must(purego.Dlsym(secLib, "kSecReturnAttributes")))
 	kSecMatchLimit = deref(must(purego.Dlsym(secLib, "kSecMatchLimit")))
 	kSecMatchLimitAll = deref(must(purego.Dlsym(secLib, "kSecMatchLimitAll")))
 
