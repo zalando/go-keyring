@@ -53,25 +53,12 @@ func (k macOSXKeychain) Get(service, username string) (string, error) {
 		return "", err
 	}
 
-	trimStr := strings.TrimSpace(string(out[:]))
-	// if the string has the well-known prefix, assume it's encoded
-	if strings.HasPrefix(trimStr, encodingPrefix) {
-		dec, err := hex.DecodeString(trimStr[len(encodingPrefix):])
-		return string(dec), err
-	} else if strings.HasPrefix(trimStr, base64EncodingPrefix) {
-		dec, err := base64.StdEncoding.DecodeString(trimStr[len(base64EncodingPrefix):])
-		return string(dec), err
-	}
-
-	return trimStr, nil
+	return decodeSecret(strings.TrimSpace(string(out[:])))
 }
 
 // Set stores a secret in the macos keyring given a service name and a user.
 func (k macOSXKeychain) Set(service, username, password string) error {
-	// if the added secret has multiple lines or some non ascii,
-	// osx will hex encode it on return. To avoid getting garbage, we
-	// encode all passwords
-	password = base64EncodingPrefix + base64.StdEncoding.EncodeToString([]byte(password))
+	password = encodeSecret(password)
 
 	cmd := exec.Command(execPathKeychain, "-i")
 	stdIn, err := cmd.StdinPipe()
@@ -195,6 +182,26 @@ func parseDumpKeychainBlob(line string) string {
 		return ""
 	}
 	return line[start : start+end]
+}
+
+// encodeSecret encodes a secret for storage. If the secret has multiple lines
+// or some non ascii, macOS tooling will hex encode it on return. To avoid
+// getting garbage, all secrets are encoded.
+func encodeSecret(secret string) string {
+	return base64EncodingPrefix + base64.StdEncoding.EncodeToString([]byte(secret))
+}
+
+// decodeSecret reverses encodeSecret. Strings without a well-known prefix are
+// returned as is.
+func decodeSecret(stored string) (string, error) {
+	if strings.HasPrefix(stored, encodingPrefix) {
+		dec, err := hex.DecodeString(stored[len(encodingPrefix):])
+		return string(dec), err
+	} else if strings.HasPrefix(stored, base64EncodingPrefix) {
+		dec, err := base64.StdEncoding.DecodeString(stored[len(base64EncodingPrefix):])
+		return string(dec), err
+	}
+	return stored, nil
 }
 
 func init() {

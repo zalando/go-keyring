@@ -21,8 +21,10 @@ keyring instead of having the user type it on every invocation.
 
 #### OS X
 
-The OS X implementation depends on the `/usr/bin/security` binary for
-interfacing with the OS X keychain. It should be available by default.
+By default, the OS X implementation depends on the `/usr/bin/security` binary
+for interfacing with the OS X keychain. It should be available by default.
+See [Keychain access control on macOS](#keychain-access-control-on-macos) for
+an opt-in alternative that calls the Security framework directly.
 
 #### Linux and *BSD
 
@@ -72,6 +74,44 @@ func main() {
 }
 
 ```
+
+## Keychain access control on macOS
+
+Keychain items are readable without a confirmation prompt by the application
+that created them. With the default implementation that application is
+`/usr/bin/security`, so any process of the same user that can run it can read
+the secrets stored through `go-keyring` without a prompt (see
+[#110](https://github.com/zalando/go-keyring/issues/110)).
+
+New applications can opt in to an implementation that calls the Security
+framework (using [purego](https://pkg.go.dev/github.com/ebitengine/purego), so
+without cgo) directly from the application process. The items are then owned
+by the application itself, and other processes, including `/usr/bin/security`,
+get a confirmation prompt:
+
+```go
+kr, err := keyring.New(keyring.Options{Backend: keyring.BackendSecurityFramework})
+if err != nil {
+    log.Fatal(err) // keyring.ErrUnsupportedBackend on platforms other than macOS
+}
+
+err = kr.Set("my-app", "anon", "secret")
+secret, err := kr.Get("my-app", "anon")
+```
+
+Things to be aware of:
+
+* The package level functions (`keyring.Set`, `keyring.Get`, ...) are unchanged
+  and keep using the default implementation.
+* macOS asks the user for confirmation when the application's code signature
+  changes (for example when the binary is rebuilt), unless it is signed with a
+  stable identity.
+* The two implementations use the same item format, but items created by one are
+  not silently readable by the other: macOS prompts because the owner differs.
+  Switching an existing application over means its users confirm a prompt once,
+  or set their secrets again.
+* There is no `ErrSetDataTooBig` limit imposed by this implementation, as it
+  doesn't go through the command line.
 
 ## Direct CLI Usage
 
