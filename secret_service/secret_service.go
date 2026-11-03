@@ -22,6 +22,10 @@ const (
 	collectionBasePath   = "/org/freedesktop/secrets/collection/"
 )
 
+// ErrPromptDismissed is returned when the user dismisses a prompt shown by the
+// Secret Service, e.g. by cancelling an unlock dialog.
+var ErrPromptDismissed = errors.New("secret service prompt dismissed")
+
 // Secret defines a org.freedesk.Secret.Item secret struct.
 type Secret struct {
 	Session     dbus.ObjectPath
@@ -118,7 +122,7 @@ func (s *SecretService) Unlock(collection dbus.ObjectPath) error {
 		return err
 	}
 
-	_, v, err := s.handlePrompt(prompt)
+	v, err := s.handlePrompt(prompt)
 	if err != nil {
 		return err
 	}
@@ -153,7 +157,7 @@ func (s *SecretService) CreateCollection(label string) (dbus.BusObject, error) {
 		return nil, err
 	}
 
-	_, v, err := s.handlePrompt(prompt)
+	v, err := s.handlePrompt(prompt)
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +184,7 @@ func (s *SecretService) CreateItem(collection dbus.BusObject, label string, attr
 		return err
 	}
 
-	_, _, err = s.handlePrompt(prompt)
+	_, err = s.handlePrompt(prompt)
 	if err != nil {
 		return err
 	}
@@ -190,14 +194,15 @@ func (s *SecretService) CreateItem(collection dbus.BusObject, label string, attr
 
 // handlePrompt checks if a prompt should be handles and handles it by
 // triggering the prompt and waiting for the Secret service daemon to display
-// the prompt to the user.
-func (s *SecretService) handlePrompt(prompt dbus.ObjectPath) (bool, dbus.Variant, error) {
+// the prompt to the user. It returns ErrPromptDismissed if the user dismissed
+// the prompt.
+func (s *SecretService) handlePrompt(prompt dbus.ObjectPath) (dbus.Variant, error) {
 	if prompt != dbus.ObjectPath("/") {
 		err := s.AddMatchSignal(dbus.WithMatchObjectPath(prompt),
 			dbus.WithMatchInterface(promptInterface),
 		)
 		if err != nil {
-			return false, dbus.MakeVariant(""), err
+			return dbus.MakeVariant(""), err
 		}
 
 		defer func(s *SecretService, options ...dbus.MatchOption) {
@@ -209,20 +214,22 @@ func (s *SecretService) handlePrompt(prompt dbus.ObjectPath) (bool, dbus.Variant
 
 		err = s.Object(serviceName, prompt).Call(promptInterface+".Prompt", 0, "").Err
 		if err != nil {
-			return false, dbus.MakeVariant(""), err
+			return dbus.MakeVariant(""), err
 		}
 
 		signal := <-promptSignal
 		switch signal.Name {
 		case promptInterface + ".Completed":
-			dismissed := signal.Body[0].(bool)
+			if dismissed := signal.Body[0].(bool); dismissed {
+				return dbus.MakeVariant(""), ErrPromptDismissed
+			}
 			result := signal.Body[1].(dbus.Variant)
-			return dismissed, result, nil
+			return result, nil
 		}
 
 	}
 
-	return false, dbus.MakeVariant(""), nil
+	return dbus.MakeVariant(""), nil
 }
 
 // SearchItems returns a list of items matching the search object.
@@ -271,7 +278,7 @@ func (s *SecretService) Delete(itemPath dbus.ObjectPath) error {
 		return err
 	}
 
-	_, _, err = s.handlePrompt(prompt)
+	_, err = s.handlePrompt(prompt)
 	if err != nil {
 		return err
 	}
