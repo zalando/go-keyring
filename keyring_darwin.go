@@ -68,10 +68,10 @@ func (k macOSXKeychain) Get(service, username string) (string, error) {
 
 // Set stores a secret in the macos keyring given a service name and a user.
 func (k macOSXKeychain) Set(service, username, password string) error {
-	// if the added secret has multiple lines or some non ascii,
-	// osx will hex encode it on return. To avoid getting garbage, we
-	// encode all passwords
-	password = base64EncodingPrefix + base64.StdEncoding.EncodeToString([]byte(password))
+	command, err := setCommand(service, username, password)
+	if err != nil {
+		return err
+	}
 
 	cmd := exec.Command(execPathKeychain, "-i")
 	stdIn, err := cmd.StdinPipe()
@@ -81,11 +81,6 @@ func (k macOSXKeychain) Set(service, username, password string) error {
 
 	if err = cmd.Start(); err != nil {
 		return err
-	}
-
-	command := fmt.Sprintf("add-generic-password -U -s %s -a %s -w %s\n", shellescape.Quote(service), shellescape.Quote(username), shellescape.Quote(password))
-	if len(command) > 4096 {
-		return ErrSetDataTooBig
 	}
 
 	if _, err := io.WriteString(stdIn, command); err != nil {
@@ -98,6 +93,25 @@ func (k macOSXKeychain) Set(service, username, password string) error {
 
 	err = cmd.Wait()
 	return err
+}
+
+// maxSecurityLineLen is the longest line, newline included, that `security -i`
+// reads whole. A longer line is split, which can hide a failed add (#153).
+const maxSecurityLineLen = 4095
+
+// setCommand returns the `security -i` line that stores password, or
+// ErrSetDataTooBig if the line is too long for `security -i` to read whole.
+func setCommand(service, username, password string) (string, error) {
+	// if the added secret has multiple lines or some non ascii,
+	// osx will hex encode it on return. To avoid getting garbage, we
+	// encode all passwords
+	password = base64EncodingPrefix + base64.StdEncoding.EncodeToString([]byte(password))
+
+	command := fmt.Sprintf("add-generic-password -U -s %s -a %s -w %s\n", shellescape.Quote(service), shellescape.Quote(username), shellescape.Quote(password))
+	if len(command) > maxSecurityLineLen {
+		return "", ErrSetDataTooBig
+	}
+	return command, nil
 }
 
 // Delete deletes a secret, identified by service & user, from the keyring.
