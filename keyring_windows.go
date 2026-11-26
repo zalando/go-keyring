@@ -1,10 +1,14 @@
 package keyring
 
 import (
+	"bytes"
+	"encoding/binary"
 	"slices"
 	"sort"
 	"strings"
 	"syscall"
+	"unicode/utf16"
+	"unicode/utf8"
 
 	"github.com/danieljoos/wincred"
 )
@@ -21,7 +25,31 @@ func (k windowsKeychain) Get(service, username string) (string, error) {
 		return "", err
 	}
 
-	return string(cred.CredentialBlob), nil
+	return decodeCredentialBlob(cred.CredentialBlob), nil
+}
+
+// decodeCredentialBlob returns the secret held in a credential blob. go-keyring
+// stores UTF-8, but cmdkey, the Credential Manager UI and other tools (such as
+// Python's keyring) store UTF-16LE. A blob is read as UTF-16LE when it has an
+// even length, contains a NUL byte or is not valid UTF-8, and decodes to valid
+// UTF-16; anything else is returned as is.
+func decodeCredentialBlob(blob []byte) string {
+	if len(blob) == 0 || len(blob)%2 != 0 || (bytes.IndexByte(blob, 0) < 0 && utf8.Valid(blob)) {
+		return string(blob)
+	}
+	units := make([]uint16, len(blob)/2)
+	for i := range units {
+		units[i] = binary.LittleEndian.Uint16(blob[2*i:])
+	}
+	for i := 0; i < len(units); i++ {
+		switch u := units[i]; {
+		case utf16.IsSurrogate(rune(u)) && u < 0xdc00 && i+1 < len(units) && units[i+1] >= 0xdc00 && units[i+1] <= 0xdfff:
+			i++ // valid surrogate pair
+		case utf16.IsSurrogate(rune(u)):
+			return string(blob)
+		}
+	}
+	return string(utf16.Decode(units))
 }
 
 // Set stores stores user and pass in the keyring under the defined service
